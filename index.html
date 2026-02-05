@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mindelo ↔ Lausanne Time Bridge</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌉</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== CSS Reset & Variables ===== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cabo Verde palette */
+            --cv-ocean: #0077b6;
+            --cv-deep: #023e8a;
+            --cv-sky: #48cae4;
+            --cv-sand: #f4a261;
+            --cv-warm: #e76f51;
+            --cv-light: #caf0f8;
+            --cv-gradient: linear-gradient(135deg, #023e8a 0%, #0077b6 40%, #48cae4 70%, #f4a261 100%);
+
+            /* Swiss palette */
+            --ch-red: #d62828;
+            --ch-mountain: #2d6a4f;
+            --ch-snow: #f8f9fa;
+            --ch-slate: #495057;
+            --ch-lake: #457b9d;
+            --ch-cream: #fefae0;
+            --ch-gradient: linear-gradient(135deg, #495057 0%, #457b9d 30%, #2d6a4f 60%, #f8f9fa 100%);
+
+            /* Shared */
+            --bridge-gold: #d4a373;
+            --text-dark: #1a1a2e;
+            --text-light: #f8f9fa;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-display: 'Playfair Display', Georgia, serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-dark);
+            background: #f0f0f5;
+            overflow-x: hidden;
+        }
+
+        /* ===== Header / Bridge ===== */
+        .bridge-header {
+            background: linear-gradient(135deg, var(--cv-deep) 0%, var(--bridge-gold) 50%, var(--ch-mountain) 100%);
+            padding: 1.5rem 1rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bridge-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .bridge-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bridge-header h1 .bridge-icon {
+            display: inline-block;
+            margin: 0 0.3em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .bridge-header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            margin-top: 0.3rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+
+        /* ===== Time Difference Banner ===== */
+        .time-diff-banner {
+            background: var(--text-dark);
+            color: var(--text-light);
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .time-diff-banner span {
+            color: var(--bridge-gold);
+        }
+
+        /* ===== Dual Clock Section ===== */
+        .clocks-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 320px;
+        }
+
+        .clock-panel {
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clock-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.08;
+            z-index: 0;
+        }
+
+        .clock-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Cabo Verde panel */
+        .clock-cv {
+            background: linear-gradient(180deg, #023e8a 0%, #0077b6 60%, #48cae4 100%);
+            color: white;
+        }
+
+        .clock-cv::before {
+            background:
+                radial-gradient(ellipse at 50% 120%, rgba(244, 162, 97, 0.3) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cpath d='M0,160 Q50,140 100,155 T200,150 T300,145 T400,160 L400,200 L0,200 Z' fill='%23f4a261' opacity='0.15'/%3E%3Cpath d='M0,170 Q60,155 120,165 T240,160 T360,158 T400,170 L400,200 L0,200 Z' fill='%2348cae4' opacity='0.1'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        /* Swiss panel */
+        .clock-ch {
+            background: linear-gradient(180deg, #457b9d 0%, #a8dadc 40%, #f1faee 100%);
+            color: var(--text-dark);
+        }
+
+        .clock-ch::before {
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cpath d='M0,120 L40,80 L80,110 L130,50 L180,90 L220,40 L270,85 L320,55 L360,95 L400,70 L400,200 L0,200 Z' fill='%232d6a4f' opacity='0.08'/%3E%3Cpath d='M0,150 L50,120 L100,140 L160,100 L210,130 L260,95 L310,125 L370,105 L400,120 L400,200 L0,200 Z' fill='%23495057' opacity='0.05'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        .clock-location {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-bottom: 0.25rem;
+        }
+
+        .clock-city {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .clock-flag {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .clock-time {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .clock-seconds {
+            font-size: 0.5em;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        .clock-date {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .clock-timezone {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        /* ===== "What's Happening Now" Section ===== */
+        .happening-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .happening-panel {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .happening-cv {
+            background: linear-gradient(135deg, #caf0f8, #e8f8ff);
+            border-bottom: 3px solid var(--cv-ocean);
+        }
+
+        .happening-ch {
+            background: linear-gradient(135deg, #f1faee, #fefae0);
+            border-bottom: 3px solid var(--ch-mountain);
+        }
+
+        .happening-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .happening-emoji {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .happening-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        /* ===== Weather Section ===== */
+        .weather-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        .weather-panel {
+            padding: 1.5rem;
+            background: white;
+            text-align: center;
+        }
+
+        .weather-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .weather-cv h3 { color: var(--cv-ocean); }
+        .weather-ch h3 { color: var(--ch-mountain); }
+
+        .weather-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .weather-temp {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .weather-desc {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: capitalize;
+            margin-top: 0.25rem;
+        }
+
+        .weather-details {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .weather-details span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .weather-error {
+            font-size: 0.85rem;
+            color: #999;
+            padding: 1rem;
+        }
+
+        /* ===== Section Dividers ===== */
+        .section-title {
+            text-align: center;
+            padding: 1.5rem 1rem 0.75rem;
+            background: #f0f0f5;
+        }
+
+        .section-title h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .section-title p {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        /* ===== Cultural Calendar ===== */
+        .calendar-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        .calendar-panel {
+            background: white;
+            padding: 1.5rem;
+        }
+
+        .calendar-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .calendar-cv h3 { color: var(--cv-ocean); }
+        .calendar-ch h3 { color: var(--ch-mountain); }
+
+        .event-item {
+            padding: 0.6rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-date {
+            background: #f8f8f8;
+            border-radius: 6px;
+            padding: 0.3rem 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            white-space: nowrap;
+            min-width: 52px;
+            text-align: center;
+            color: #555;
+        }
+
+        .calendar-cv .event-date { border-left: 3px solid var(--cv-ocean); }
+        .calendar-ch .event-date { border-left: 3px solid var(--ch-red); }
+
+        .event-info {
+            flex: 1;
+        }
+
+        .event-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .event-desc {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.15rem;
+        }
+
+        .event-past {
+            opacity: 0.45;
+        }
+
+        /* ===== Neuroscience Tip ===== */
+        .neuro-section {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .neuro-section h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .neuro-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--bridge-gold);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .neuro-tip {
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1rem;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+
+        .neuro-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .neuro-source {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-top: 1rem;
+        }
+
+        /* ===== Footer ===== */
+        .bridge-footer {
+            background: var(--text-dark);
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            padding: 1.25rem;
+            font-size: 0.75rem;
+        }
+
+        .bridge-footer .hearts {
+            color: var(--bridge-gold);
+            margin: 0 0.25rem;
+        }
+
+        /* ===== Mobile Responsive ===== */
+        @media (max-width: 700px) {
+            .clocks-section,
+            .happening-section,
+            .weather-section,
+            .calendar-section {
+                grid-template-columns: 1fr;
+            }
+
+            .clock-panel {
+                padding: 1.5rem 1rem;
+                min-height: auto;
+            }
+
+            .clock-time {
+                font-size: 3rem;
+            }
+
+            .happening-panel {
+                padding: 1rem;
+            }
+
+            .api-banner .api-input-group {
+                flex-direction: column;
+            }
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Smooth time transition */
+        .clock-time {
+            transition: opacity 0.15s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="bridge-header">
+        <h1>Mindelo <span class="bridge-icon">🌉</span> Lausanne</h1>
+        <p class="subtitle">A bridge between two homes</p>
+    </header>
+
+    <!-- Time Difference -->
+    <div class="time-diff-banner" id="timeDiffBanner">
+        Lausanne is <span id="timeDiff">2 hours</span> ahead of Mindelo
+    </div>
+
+    <!-- Dual Clocks -->
+    <section class="clocks-section">
+        <div class="clock-panel clock-cv">
+            <div class="clock-location">Cabo Verde</div>
+            <div class="clock-city">Mindelo</div>
+            <div class="clock-flag">🇨🇻</div>
+            <div class="clock-time" id="timeMindelo">--:--</div>
+            <div class="clock-date" id="dateMindelo">Loading...</div>
+            <div class="clock-timezone" id="tzMindelo">CVT (UTC-1)</div>
+        </div>
+        <div class="clock-panel clock-ch">
+            <div class="clock-location">Switzerland</div>
+            <div class="clock-city">Lausanne</div>
+            <div class="clock-flag">🇨🇭</div>
+            <div class="clock-time" id="timeLausanne">--:--</div>
+            <div class="clock-date" id="dateLausanne">Loading...</div>
+            <div class="clock-timezone" id="tzLausanne">CET (UTC+1)</div>
+        </div>
+    </section>
+
+    <!-- What's Happening Now -->
+    <section class="happening-section">
+        <div class="happening-panel happening-cv">
+            <div class="happening-label">Right now in Mindelo</div>
+            <span class="happening-emoji" id="happeningCvEmoji">☀️</span>
+            <div class="happening-text" id="happeningCv">Loading...</div>
+        </div>
+        <div class="happening-panel happening-ch">
+            <div class="happening-label">Right now in Lausanne</div>
+            <span class="happening-emoji" id="happeningChEmoji">🏔️</span>
+            <div class="happening-text" id="happeningCh">Loading...</div>
+        </div>
+    </section>
+
+    <!-- Weather -->
+    <div class="section-title">
+        <h2>Weather Comparison</h2>
+        <p>Live conditions in both cities</p>
+    </div>
+
+    <section class="weather-section">
+        <div class="weather-panel weather-cv" id="weatherCv">
+            <h3>🇨🇻 Mindelo Weather</h3>
+            <div id="weatherCvContent">
+                <div class="weather-error">Loading weather data...</div>
+            </div>
+        </div>
+        <div class="weather-panel weather-ch" id="weatherCh">
+            <h3>🇨🇭 Lausanne Weather</h3>
+            <div id="weatherChContent">
+                <div class="weather-error">Loading weather data...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cultural Calendar -->
+    <div class="section-title">
+        <h2>Cultural Calendar</h2>
+        <p>Upcoming holidays &amp; events</p>
+    </div>
+
+    <section class="calendar-section">
+        <div class="calendar-panel calendar-cv" id="calendarCv"></div>
+        <div class="calendar-panel calendar-ch" id="calendarCh"></div>
+    </section>
+
+    <!-- Neuroscience Tip -->
+    <section class="neuro-section" id="neuroSection">
+        <h2>🧠 Daily Brain Insight</h2>
+        <div class="neuro-category" id="neuroCategory">Loading...</div>
+        <span class="neuro-emoji" id="neuroEmoji">🧬</span>
+        <div class="neuro-tip" id="neuroTip">Loading your daily tip...</div>
+        <div class="neuro-source" id="neuroSource"></div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bridge-footer">
+        Mindelo ↔ Lausanne Time Bridge <span class="hearts">♥</span> Connecting two homes across the Atlantic
+    </footer>
+
+    <script>
+    // ===================================================================
+    //  MINDELO-LAUSANNE TIME BRIDGE - Main Application Script
+    // ===================================================================
+
+    (function() {
+        'use strict';
+
+        // ---- Configuration ----
+        const MINDELO_TZ = 'Atlantic/Cape_Verde';  // UTC-1 year-round
+        const LAUSANNE_TZ = 'Europe/Zurich';        // CET/CEST
+
+        // ---- Clock & Time ----
+        function updateClocks() {
+            const now = new Date();
+
+            // Mindelo time
+            const cvOptions = { timeZone: MINDELO_TZ };
+            const cvTime = now.toLocaleTimeString('en-GB', { ...cvOptions, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const cvDate = now.toLocaleDateString('en-GB', { ...cvOptions, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const cvParts = cvTime.split(':');
+            document.getElementById('timeMindelo').innerHTML =
+                cvParts[0] + ':' + cvParts[1] + '<span class="clock-seconds">:' + cvParts[2] + '</span>';
+            document.getElementById('dateMindelo').textContent = cvDate;
+
+            // Lausanne time
+            const chOptions = { timeZone: LAUSANNE_TZ };
+            const chTime = now.toLocaleTimeString('en-GB', { ...chOptions, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            const chDate = now.toLocaleDateString('en-GB', { ...chOptions, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const chParts = chTime.split(':');
+            document.getElementById('timeLausanne').innerHTML =
+                chParts[0] + ':' + chParts[1] + '<span class="clock-seconds">:' + chParts[2] + '</span>';
+            document.getElementById('dateLausanne').textContent = chDate;
+
+            // Calculate time difference
+            const cvOffset = getTimezoneOffset(now, MINDELO_TZ);
+            const chOffset = getTimezoneOffset(now, LAUSANNE_TZ);
+            const diffHours = (chOffset - cvOffset) / 60;
+            document.getElementById('timeDiff').textContent = diffHours + ' hour' + (diffHours !== 1 ? 's' : '');
+
+            // Update timezone labels
+            const isDST = isSwissDST(now);
+            document.getElementById('tzLausanne').textContent = isDST ? 'CEST (UTC+2)' : 'CET (UTC+1)';
+            document.getElementById('tzMindelo').textContent = 'CVT (UTC−1)';
+
+            // Update what's happening
+            updateHappening(now);
+        }
+
+        function getTimezoneOffset(date, tz) {
+            const utcStr = date.toLocaleString('en-US', { timeZone: 'UTC' });
+            const tzStr = date.toLocaleString('en-US', { timeZone: tz });
+            const utcDate = new Date(utcStr);
+            const tzDate = new Date(tzStr);
+            return (tzDate - utcDate) / 60000;
+        }
+
+        function isSwissDST(date) {
+            const jan = new Date(date.getFullYear(), 0, 1);
+            const jul = new Date(date.getFullYear(), 6, 1);
+            const janOffset = getTimezoneOffset(jan, LAUSANNE_TZ);
+            const julOffset = getTimezoneOffset(jul, LAUSANNE_TZ);
+            const currentOffset = getTimezoneOffset(date, LAUSANNE_TZ);
+            return currentOffset === Math.max(janOffset, julOffset);
+        }
+
+        function getHourInTZ(date, tz) {
+            return parseInt(date.toLocaleString('en-GB', { timeZone: tz, hour: '2-digit', hour12: false }));
+        }
+
+        // ---- What's Happening Now ----
+        const happeningCV = [
+            { start: 0, end: 5, emoji: '🌙', text: 'Mindelo is sleeping under the Atlantic stars' },
+            { start: 5, end: 7, emoji: '🌅', text: 'Early risers in Mindelo are watching the sunrise over the bay' },
+            { start: 7, end: 9, emoji: '☕', text: 'Mindelo is waking up — coffee and fresh bread at the padaria' },
+            { start: 9, end: 11, emoji: '🏪', text: 'The Mercado Municipal is buzzing with fresh fish and produce' },
+            { start: 11, end: 12, emoji: '🎵', text: 'Morna music drifts through the streets of Mindelo' },
+            { start: 12, end: 14, emoji: '🍽️', text: 'Your family in Mindelo is having lunch — cachupa is on the table' },
+            { start: 14, end: 16, emoji: '🌊', text: 'Afternoon in Mindelo — perfect time for a walk along Laginha beach' },
+            { start: 16, end: 18, emoji: '⚽', text: 'Kids are playing football on the streets of Mindelo' },
+            { start: 18, end: 19, emoji: '🌇', text: 'Golden hour in Mindelo — the bay glows with warm light' },
+            { start: 19, end: 20, emoji: '🍷', text: 'Grogue time — Mindelo is settling into the evening' },
+            { start: 20, end: 21, emoji: '🎶', text: 'Live music fills the bars along Rua de Lisboa' },
+            { start: 21, end: 23, emoji: '🌃', text: 'Mindelo nightlife is coming alive — the city of Cesária Évora never sleeps early' },
+            { start: 23, end: 24, emoji: '🌙', text: 'Late night in Mindelo — the Atlantic breeze cools the city' }
+        ];
+
+        const happeningCH = [
+            { start: 0, end: 5, emoji: '🌙', text: 'Lausanne is asleep — the Alps stand guard in the moonlight' },
+            { start: 5, end: 7, emoji: '🏔️', text: 'Dawn breaks over Lake Geneva and the Alpine peaks' },
+            { start: 7, end: 9, emoji: '🥐', text: 'Lausanne is having breakfast — croissants and café au lait' },
+            { start: 9, end: 11, emoji: '💼', text: 'The workday is underway in Lausanne — EPFL buzzes with ideas' },
+            { start: 11, end: 12, emoji: '📚', text: 'Mid-morning in Lausanne — labs and lectures in full swing' },
+            { start: 12, end: 13, emoji: '🧀', text: 'Lunch break in Lausanne — fondue or a lakeside sandwich' },
+            { start: 13, end: 15, emoji: '🏢', text: 'Afternoon productivity in Lausanne — the Swiss clockwork keeps ticking' },
+            { start: 15, end: 16, emoji: '☕', text: 'Coffee break in Lausanne — time for a quick espresso' },
+            { start: 16, end: 18, emoji: '🚶', text: 'Lausanne winds down — people stroll along the Ouchy waterfront' },
+            { start: 18, end: 19, emoji: '🏠', text: 'Heading home in Lausanne — the Métro carries commuters uphill' },
+            { start: 19, end: 21, emoji: '🍷', text: 'Lausanne is winding down for the evening — dinner time with Swiss wine' },
+            { start: 21, end: 22, emoji: '📖', text: 'Quiet evening in Lausanne — reading by the window with lake views' },
+            { start: 22, end: 24, emoji: '🌙', text: 'Lausanne is settling in for the night — bonne nuit!' }
+        ];
+
+        function updateHappening(now) {
+            const cvHour = getHourInTZ(now, MINDELO_TZ);
+            const chHour = getHourInTZ(now, LAUSANNE_TZ);
+
+            const cvScene = happeningCV.find(h => cvHour >= h.start && cvHour < h.end) || happeningCV[0];
+            const chScene = happeningCH.find(h => chHour >= h.start && chHour < h.end) || happeningCH[0];
+
+            document.getElementById('happeningCvEmoji').textContent = cvScene.emoji;
+            document.getElementById('happeningCv').textContent = cvScene.text;
+            document.getElementById('happeningChEmoji').textContent = chScene.emoji;
+            document.getElementById('happeningCh').textContent = chScene.text;
+        }
+
+        // ---- Weather (Open-Meteo — free, no API key needed) ----
+        // WMO Weather interpretation codes → emoji + description
+        const WMO_CODES = {
+            0: ['☀️', 'Clear sky'],
+            1: ['🌤️', 'Mainly clear'], 2: ['⛅', 'Partly cloudy'], 3: ['☁️', 'Overcast'],
+            45: ['🌫️', 'Fog'], 48: ['🌫️', 'Depositing rime fog'],
+            51: ['🌦️', 'Light drizzle'], 53: ['🌦️', 'Moderate drizzle'], 55: ['🌧️', 'Dense drizzle'],
+            61: ['🌧️', 'Slight rain'], 63: ['🌧️', 'Moderate rain'], 65: ['🌧️', 'Heavy rain'],
+            71: ['🌨️', 'Slight snow'], 73: ['🌨️', 'Moderate snow'], 75: ['❄️', 'Heavy snow'],
+            77: ['❄️', 'Snow grains'],
+            80: ['🌦️', 'Slight showers'], 81: ['🌧️', 'Moderate showers'], 82: ['🌧️', 'Violent showers'],
+            85: ['🌨️', 'Slight snow showers'], 86: ['❄️', 'Heavy snow showers'],
+            95: ['⛈️', 'Thunderstorm'], 96: ['⛈️', 'Thunderstorm with slight hail'],
+            99: ['⛈️', 'Thunderstorm with heavy hail']
+        };
+
+        function renderWeather(containerId, current) {
+            const code = current.weather_code;
+            const [emoji, desc] = WMO_CODES[code] || ['🌡️', 'Unknown'];
+            const temp = Math.round(current.temperature_2m);
+            const feelsLike = Math.round(current.apparent_temperature);
+            const humidity = current.relative_humidity_2m;
+            const wind = Math.round(current.wind_speed_10m);
+
+            document.getElementById(containerId).innerHTML = `
+                <div class="weather-icon">${emoji}</div>
+                <div class="weather-temp">${temp}°C</div>
+                <div class="weather-desc">${desc}</div>
+                <div class="weather-details">
+                    <span>🌡️ Feels ${feelsLike}°</span>
+                    <span>💧 ${humidity}%</span>
+                    <span>💨 ${wind} km/h</span>
+                </div>
+            `;
+        }
+
+        function renderWeatherError(containerId, msg) {
+            document.getElementById(containerId).innerHTML =
+                `<div class="weather-error">${msg}</div>`;
+        }
+
+        async function fetchWeather() {
+            // Mindelo: 16.89°N, 24.98°W | Lausanne: 46.52°N, 6.63°E
+            const cities = [
+                { lat: 16.89, lon: -24.98, tz: 'Atlantic/Cape_Verde', container: 'weatherCvContent' },
+                { lat: 46.52, lon: 6.63, tz: 'Europe/Zurich', container: 'weatherChContent' }
+            ];
+
+            for (const city of cities) {
+                try {
+                    const params = [
+                        `latitude=${city.lat}`,
+                        `longitude=${city.lon}`,
+                        'current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+                        `timezone=${encodeURIComponent(city.tz)}`
+                    ].join('&');
+                    const url = `https://api.open-meteo.com/v1/forecast?${params}`;
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        renderWeatherError(city.container, 'Weather unavailable (HTTP ' + res.status + ')');
+                        continue;
+                    }
+                    const data = await res.json();
+                    renderWeather(city.container, data.current);
+                } catch (err) {
+                    renderWeatherError(city.container, 'Could not fetch weather data');
+                }
+            }
+        }
+
+        // ---- Cultural Calendar ----
+        // Easter-based dates need to be calculated per year (Carnival, Good Friday, etc.)
+        function getEasterDate(year) {
+            // Anonymous Gregorian algorithm
+            const a = year % 19;
+            const b = Math.floor(year / 100);
+            const c = year % 100;
+            const d = Math.floor(b / 4);
+            const e = b % 4;
+            const f = Math.floor((b + 8) / 25);
+            const g = Math.floor((b - f + 1) / 3);
+            const h = (19 * a + b - d - g + 15) % 30;
+            const i = Math.floor(c / 4);
+            const k = c % 4;
+            const l = (32 + 2 * e + 2 * i - h - k) % 7;
+            const m = Math.floor((a + 11 * h + 22 * l) / 451);
+            const month = Math.floor((h + l - 7 * m + 114) / 31);
+            const day = ((h + l - 7 * m + 114) % 31) + 1;
+            return new Date(year, month - 1, day);
+        }
+
+        function addDays(date, days) {
+            const d = new Date(date);
+            d.setDate(d.getDate() + days);
+            return d;
+        }
+
+        function fmt(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        // Federal Fast Monday (Vaud): Monday after the 3rd Sunday of September
+        function getFederalFastMonday(year) {
+            // 3rd Sunday of September
+            let d = new Date(year, 8, 1); // Sept 1
+            const dayOfWeek = d.getDay(); // 0=Sun
+            const firstSunday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+            const thirdSunday = firstSunday + 14;
+            return new Date(year, 8, thirdSunday + 1); // Monday after
+        }
+
+        function getCulturalEvents() {
+            const year = new Date().getFullYear();
+            const easter = getEasterDate(year);
+
+            // Derived dates
+            const shroveTuesday = addDays(easter, -47);   // Carnaval Tuesday
+            const ashWednesday = addDays(easter, -46);
+            const goodFriday = addDays(easter, -2);
+            const easterMonday = addDays(easter, 1);
+            const ascension = addDays(easter, 39);
+            const whitMonday = addDays(easter, 50);
+            const federalFast = getFederalFastMonday(year);
+
+            // ---- Cabo Verde: National holidays + Mindelo festivals ----
+            const cvEvents = [
+                // National public holidays
+                { date: `${year}-01-01`, name: "Ano Novo", desc: "New Year's Day — celebrations across the islands" },
+                { date: `${year}-01-13`, name: "Dia da Liberdade e Democracia", desc: "Freedom and Democracy Day" },
+                { date: `${year}-01-20`, name: "Dia dos Heróis Nacionais", desc: "National Heroes' Day — honouring Amílcar Cabral" },
+                { date: `${year}-01-22`, name: "Dia de São Vicente", desc: "São Vicente island day — concerts on Rua de Lisboa" },
+                // Carnaval (moveable — based on Easter)
+                { date: fmt(addDays(shroveTuesday, -21)), name: "Mandingas Begin", desc: "Sunday parades of Mandingas tradition start in Mindelo" },
+                { date: fmt(shroveTuesday), name: "Carnaval — Terça de Entrudo", desc: "Shrove Tuesday — Mindelo's main Carnival parade, the biggest in Cabo Verde" },
+                { date: fmt(ashWednesday), name: "Quarta-feira de Cinzas", desc: "Ash Wednesday — national holiday, Carnival awards ceremony" },
+                { date: fmt(goodFriday), name: "Sexta-feira Santa", desc: "Good Friday" },
+                { date: `${year}-05-01`, name: "Dia do Trabalhador", desc: "Labour Day" },
+                { date: `${year}-06-01`, name: "Dia da Criança", desc: "Children's Day — festivities across the islands" },
+                { date: `${year}-06-24`, name: "São João — Kola San Djon", desc: "Midsummer festival in Ribeira de Julião — music, drumming, fire-jumping" },
+                { date: `${year}-07-05`, name: "Dia da Independência", desc: "Independence Day — Cabo Verde's national day, major concerts" },
+                { date: `${year}-08-15`, name: "Nossa Senhora da Graça", desc: "Assumption of Mary — patron saint festivities" },
+                { date: `${year}-08-15`, name: "Baía das Gatas Festival", desc: "Free open-air beach music festival near Mindelo (full moon weekend in August)" },
+                { date: `${year}-09-12`, name: "Dia da Nação", desc: "Nationality Day — celebrating Cabo Verdean identity and culture" },
+                { date: `${year}-10-01`, name: "Mindelact", desc: "International theatre festival in Mindelo (September/October)" },
+                { date: `${year}-11-01`, name: "Dia de Todos os Santos", desc: "All Saints' Day" },
+                { date: `${year}-12-25`, name: "Natal", desc: "Christmas Day — family gatherings and festive food" },
+                { date: `${year}-12-31`, name: "Réveillon", desc: "New Year's Eve — major concert on Rua de Lisboa" }
+            ];
+
+            // ---- Switzerland (Vaud canton): Official holidays + Lausanne events ----
+            const chEvents = [
+                { date: `${year}-01-01`, name: "Nouvel An", desc: "New Year's Day" },
+                { date: `${year}-01-02`, name: "Saint-Berchtold", desc: "Berchtoldstag — Vaud cantonal holiday, unique to Lausanne's region" },
+                { date: fmt(goodFriday), name: "Vendredi Saint", desc: "Good Friday — a quiet Swiss holiday" },
+                { date: fmt(easterMonday), name: "Lundi de Pâques", desc: "Easter Monday — chocolate eggs and family brunches" },
+                { date: fmt(ascension), name: "Ascension", desc: "Ascension Day — a Thursday off, long weekend tradition" },
+                { date: fmt(whitMonday), name: "Lundi de Pentecôte", desc: "Whit Monday" },
+                { date: `${year}-08-01`, name: "Fête nationale", desc: "Swiss National Day — fireworks, bonfires, and fondue" },
+                { date: fmt(federalFast), name: "Lundi du Jeûne fédéral", desc: "Federal Fast Monday — Vaud tradition, unique to the region" },
+                { date: `${year}-12-25`, name: "Noël", desc: "Christmas Day — fondue, raclette, and vin chaud" }
+            ];
+
+            return { cvEvents, chEvents };
+        }
+
+        function renderCalendar() {
+            const { cvEvents, chEvents } = getCulturalEvents();
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            function renderEvents(events, containerId, flag, title) {
+                // Sort and mark past events
+                const sorted = events
+                    .map(e => ({ ...e, dateObj: new Date(e.date + 'T00:00:00') }))
+                    .sort((a, b) => a.dateObj - b.dateObj);
+
+                // Show upcoming first, then past at the end
+                const upcoming = sorted.filter(e => e.dateObj >= now);
+                const past = sorted.filter(e => e.dateObj < now);
+                const ordered = [...upcoming, ...past];
+
+                const html = `
+                    <h3>${flag} ${title}</h3>
+                    ${ordered.map(e => {
+                        const isPast = e.dateObj < now;
+                        const dateStr = e.dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                        return `
+                            <div class="event-item ${isPast ? 'event-past' : ''}">
+                                <div class="event-date">${dateStr}</div>
+                                <div class="event-info">
+                                    <div class="event-name">${e.name}</div>
+                                    <div class="event-desc">${e.desc}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+
+                document.getElementById(containerId).innerHTML = html;
+            }
+
+            renderEvents(cvEvents, 'calendarCv', '🇨🇻', 'Cabo Verde & Mindelo');
+            renderEvents(chEvents, 'calendarCh', '🇨🇭', 'Switzerland');
+        }
+
+        // ---- Neuroscience Tips ----
+        const neuroTips = [
+            {
+                category: 'Circadian Rhythms',
+                emoji: '🌅',
+                tip: 'Your body\'s master clock — the suprachiasmatic nucleus — is only about the size of a grain of rice, yet it orchestrates the timing of nearly every cell in your body. Morning sunlight is its most powerful calibrator.',
+                source: 'Chronobiology research'
+            },
+            {
+                category: 'Jet Lag Science',
+                emoji: '✈️',
+                tip: 'Travelling east (like Mindelo → Lausanne) is harder on your body than going west. Your internal clock naturally runs slightly longer than 24 hours, making it easier to extend your day than shorten it.',
+                source: 'Sleep medicine research'
+            },
+            {
+                category: 'Time Perception',
+                emoji: '⏳',
+                tip: 'Time feels slower when you\'re experiencing new things. That\'s why holidays feel long but routine weeks fly by. Your brain creates more detailed memories for novel experiences, making them seem to last longer in retrospect.',
+                source: 'Cognitive neuroscience'
+            },
+            {
+                category: 'Sleep Science',
+                emoji: '😴',
+                tip: 'During deep sleep, your brain\'s glymphatic system flushes out metabolic waste — including proteins linked to Alzheimer\'s. Think of sleep as your brain\'s nightly cleaning service.',
+                source: 'Neuroscience of sleep'
+            },
+            {
+                category: 'Social Jetlag',
+                emoji: '⏰',
+                tip: 'Staying up late on weekends and sleeping in creates "social jetlag" — your body experiences it much like crossing time zones. Keeping a consistent sleep schedule, even on weekends, benefits your health.',
+                source: 'Chronobiology research'
+            },
+            {
+                category: 'Light & Mood',
+                emoji: '💡',
+                tip: 'Blue light from screens suppresses melatonin production, but it\'s not just about sleep — light exposure patterns throughout the day also affect mood, alertness, and even immune function.',
+                source: 'Photobiology research'
+            },
+            {
+                category: 'Nostalgia & Time',
+                emoji: '🎵',
+                tip: 'Music heard between ages 12-22 tends to stick with us the strongest. This "reminiscence bump" happens because your brain encodes memories more intensely during periods of identity formation.',
+                source: 'Memory research'
+            },
+            {
+                category: 'Body Temperature',
+                emoji: '🌡️',
+                tip: 'Your body temperature follows a circadian rhythm, dropping about 1-1.5°C at night. This cooling is a signal to your brain that it\'s time to sleep — a cool bedroom (around 18°C) supports better rest.',
+                source: 'Thermoregulation studies'
+            },
+            {
+                category: 'Chronotypes',
+                emoji: '🦉',
+                tip: 'Whether you\'re a morning lark or night owl is largely genetic. About 25% of people are strong morning types, 25% strong evening types, and the rest fall somewhere in between.',
+                source: 'Behavioral genetics'
+            },
+            {
+                category: 'Napping Science',
+                emoji: '💤',
+                tip: 'A 20-minute nap boosts alertness and performance without grogginess. Longer naps (90 minutes) allow a full sleep cycle and can enhance creativity and emotional memory.',
+                source: 'Sleep research'
+            },
+            {
+                category: 'Sodade & The Brain',
+                emoji: '💙',
+                tip: 'Longing for home activates brain regions associated with reward and motivation — not just sadness. Sodade, that deeply Cabo Verdean feeling, is your brain\'s way of keeping important social bonds alive.',
+                source: 'Social neuroscience'
+            },
+            {
+                category: 'Bilingual Brains',
+                emoji: '🧠',
+                tip: 'Speaking multiple languages (like Kriolu and French) strengthens executive function and may delay cognitive decline. Each language activates slightly different neural networks, keeping your brain more flexible.',
+                source: 'Neurolinguistics'
+            },
+            {
+                category: 'Altitude & Cognition',
+                emoji: '🏔️',
+                tip: 'Living at altitude (like visits to the Swiss Alps) temporarily affects cognition due to lower oxygen. But regular exposure improves your body\'s oxygen efficiency — mountain air literally sharpens your blood.',
+                source: 'High-altitude physiology'
+            },
+            {
+                category: 'Ocean & Wellbeing',
+                emoji: '🌊',
+                tip: 'Being near the ocean — like in Mindelo — reduces cortisol and increases serotonin. The sound of waves alters brain wave patterns, promoting a meditative state. It\'s called "blue mind" science.',
+                source: 'Environmental neuroscience'
+            },
+            {
+                category: 'Food & Brain Clocks',
+                emoji: '🍽️',
+                tip: 'When you eat matters almost as much as what you eat for your circadian health. Regular meal times help synchronize peripheral body clocks in your liver, gut, and muscles with your brain\'s master clock.',
+                source: 'Chrononutrition research'
+            }
+        ];
+
+        function renderNeuroTip() {
+            // Use day of year to rotate tips
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((now - start) / 86400000);
+            const tipIndex = dayOfYear % neuroTips.length;
+            const tip = neuroTips[tipIndex];
+
+            document.getElementById('neuroCategory').textContent = tip.category;
+            document.getElementById('neuroEmoji').textContent = tip.emoji;
+            document.getElementById('neuroTip').textContent = tip.tip;
+            document.getElementById('neuroSource').textContent = tip.source;
+        }
+
+        // ---- Initialize ----
+        function init() {
+            updateClocks();
+            setInterval(updateClocks, 1000);
+            fetchWeather();
+            // Refresh weather every 10 minutes
+            setInterval(fetchWeather, 600000);
+            renderCalendar();
+            renderNeuroTip();
+        }
+
+        // Start when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+    </script>
+</body>
+</html>
