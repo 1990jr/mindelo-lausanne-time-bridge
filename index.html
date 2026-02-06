@@ -877,7 +877,7 @@
     <!-- Best Time to Call -->
     <div class="section-title">
         <h2 id="callTitle">Best Time to Call</h2>
-        <p id="callSubtitle">Live overlap of local work hours</p>
+        <p id="callSubtitle">Weekend overlap outside work and sleep hours</p>
     </div>
 
     <section class="call-section">
@@ -886,12 +886,12 @@
             <div class="call-next" id="callNext">Loading...</div>
             <div class="work-hours-grid">
                 <div class="hours-panel hours-cv">
-                    <div class="hours-label" id="callHoursCvLabel">🇨🇻 Mindelo work hours</div>
-                    <div class="hours-value" id="workHoursCv">08:00-13:00, 14:00-18:00</div>
+                    <div class="hours-label" id="callHoursCvLabel">🇨🇻 Mindelo call window</div>
+                    <div class="hours-value" id="workHoursCv">Sat-Sun, 08:00-21:00, excluding 08:00-13:00 &amp; 14:00-18:00</div>
                 </div>
                 <div class="hours-panel hours-ch">
-                    <div class="hours-label" id="callHoursChLabel">🇨🇭 Lausanne work hours</div>
-                    <div class="hours-value" id="workHoursCh">09:00-18:00</div>
+                    <div class="hours-label" id="callHoursChLabel">🇨🇭 Lausanne call window</div>
+                    <div class="hours-value" id="workHoursCh">Sat-Sun, 08:00-21:00, excluding 09:00-18:00</div>
                 </div>
             </div>
         </div>
@@ -1094,16 +1094,16 @@
 
             // ---- Best time to call ----
             callTitle:          { en: 'Best Time to Call', fr: 'Meilleur moment pour appeler', pt: 'Melhor horário para ligar' },
-            callSubtitle:       { en: 'Live overlap of local work hours', fr: "Chevauchement en direct des horaires de travail", pt: 'Sobreposição em tempo real dos horários de trabalho' },
-            callHoursCvLabel:   { en: '🇨🇻 Mindelo work hours', fr: '🇨🇻 Horaires de travail à Mindelo', pt: '🇨🇻 Horário de trabalho em Mindelo' },
-            callHoursChLabel:   { en: '🇨🇭 Lausanne work hours', fr: '🇨🇭 Horaires de travail à Lausanne', pt: '🇨🇭 Horário de trabalho em Lausanne' },
-            callHoursCvValue:   { en: '08:00-13:00, 14:00-18:00', fr: '08:00-13:00, 14:00-18:00', pt: '08:00-13:00, 14:00-18:00' },
-            callHoursChValue:   { en: '09:00-18:00', fr: '09:00-18:00', pt: '09:00-18:00' },
+            callSubtitle:       { en: 'Weekend overlap outside work and sleep hours', fr: "Chevauchement du week-end hors travail et sommeil", pt: 'Sobreposição de fim de semana fora do trabalho e do sono' },
+            callHoursCvLabel:   { en: '🇨🇻 Mindelo call window', fr: "🇨🇻 Fenêtre d'appel à Mindelo", pt: '🇨🇻 Janela para ligar em Mindelo' },
+            callHoursChLabel:   { en: '🇨🇭 Lausanne call window', fr: "🇨🇭 Fenêtre d'appel à Lausanne", pt: '🇨🇭 Janela para ligar em Lausanne' },
+            callHoursCvValue:   { en: 'Sat-Sun, 08:00-21:00, excluding 08:00-13:00 & 14:00-18:00', fr: 'Sam-Dim, 08:00-21:00, hors 08:00-13:00 et 14:00-18:00', pt: 'Sáb-Dom, 08:00-21:00, excluindo 08:00-13:00 e 14:00-18:00' },
+            callHoursChValue:   { en: 'Sat-Sun, 08:00-21:00, excluding 09:00-18:00', fr: 'Sam-Dim, 08:00-21:00, hors 09:00-18:00', pt: 'Sáb-Dom, 08:00-21:00, excluindo 09:00-18:00' },
             callStatusNow:      { en: 'Good moment to call now', fr: 'Bon moment pour appeler maintenant', pt: 'Bom momento para ligar agora' },
             callStatusLater:    { en: 'Next overlap window', fr: 'Prochaine fenêtre commune', pt: 'Próxima janela em comum' },
-            callStatusNone:     { en: 'No overlap in the next 24 hours', fr: 'Aucun chevauchement dans les prochaines 24 heures', pt: 'Sem sobreposição nas próximas 24 horas' },
+            callStatusNone:     { en: 'No overlap in the next 7 days', fr: 'Aucun chevauchement dans les 7 prochains jours', pt: 'Sem sobreposição nos próximos 7 dias' },
             callUntil:          { en: 'Until', fr: "Jusqu'à", pt: 'Até' },
-            callNoWindow:       { en: 'Try again tomorrow', fr: 'Réessayez demain', pt: 'Tente novamente amanhã' },
+            callNoWindow:       { en: 'Check next weekend', fr: 'Vérifiez le week-end prochain', pt: 'Verifique no próximo fim de semana' },
             callWindowPrefix:   { en: 'Lausanne', fr: 'Lausanne', pt: 'Lausanne' },
             callWindowSuffix:   { en: 'Mindelo', fr: 'Mindelo', pt: 'Mindelo' },
 
@@ -1604,6 +1604,7 @@
         }
 
         // ---- Call overlap ----
+        const CALL_AWAKE_WINDOW = { start: 8 * 60, end: 21 * 60 };
         const WORK_HOURS = {
             mindelo: [
                 { start: 8 * 60, end: 13 * 60 },
@@ -1626,15 +1627,35 @@
             return (hour * 60) + minute;
         }
 
+        function isWithinAwakeWindow(minutes) {
+            return minutes >= CALL_AWAKE_WINDOW.start && minutes < CALL_AWAKE_WINDOW.end;
+        }
+
         function isWithinWorkHours(minutes, windows) {
             return windows.some(w => minutes >= w.start && minutes < w.end);
+        }
+
+        function isWeekendInTZ(date, tz) {
+            const weekday = new Intl.DateTimeFormat('en-US', {
+                timeZone: tz,
+                weekday: 'short'
+            }).format(date);
+            return weekday === 'Sat' || weekday === 'Sun';
         }
 
         function isOverlapMoment(date) {
             const mindeloMinutes = getMinutesInTZ(date, MINDELO_TZ);
             const lausanneMinutes = getMinutesInTZ(date, LAUSANNE_TZ);
-            return isWithinWorkHours(mindeloMinutes, WORK_HOURS.mindelo) &&
-                   isWithinWorkHours(lausanneMinutes, WORK_HOURS.lausanne);
+            const weekendInMindelo = isWeekendInTZ(date, MINDELO_TZ);
+            const weekendInLausanne = isWeekendInTZ(date, LAUSANNE_TZ);
+            const workInMindelo = isWithinWorkHours(mindeloMinutes, WORK_HOURS.mindelo);
+            const workInLausanne = isWithinWorkHours(lausanneMinutes, WORK_HOURS.lausanne);
+            return weekendInMindelo &&
+                   weekendInLausanne &&
+                   isWithinAwakeWindow(mindeloMinutes) &&
+                   isWithinAwakeWindow(lausanneMinutes) &&
+                   !workInMindelo &&
+                   !workInLausanne;
         }
 
         function getOverlapWindows(now) {
@@ -1643,7 +1664,7 @@
             const windows = [];
             let activeStart = null;
 
-            for (let i = 0; i <= 96; i++) {
+            for (let i = 0; i <= 672; i++) {
                 const slot = new Date(start.getTime() + (i * stepMs));
                 const active = isOverlapMoment(slot);
 
@@ -1651,7 +1672,7 @@
                     activeStart = slot;
                 }
 
-                if ((!active || i === 96) && activeStart) {
+                if ((!active || i === 672) && activeStart) {
                     windows.push({ start: activeStart, end: slot });
                     activeStart = null;
                 }
