@@ -532,6 +532,89 @@
             opacity: 0.4;
         }
 
+        /* ===== News & Media ===== */
+        .media-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 0 1rem 1rem;
+            background: #f0f0f5;
+        }
+
+        .media-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 1.25rem;
+        }
+
+        .media-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            margin-bottom: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .media-cv h3 { color: var(--cv-ocean); }
+        .media-ch h3 { color: var(--ch-mountain); }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .media-link {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            transition: all 0.15s ease;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .media-link:hover {
+            background: #eef2ff;
+            border-color: #c5cae9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .media-link .media-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .media-link .media-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .media-link .media-name {
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-link .media-type {
+            font-size: 0.6rem;
+            color: #999;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         /* ===== Neuroscience Tip ===== */
         .neuro-section {
             background: linear-gradient(135deg, #1a1a2e, #16213e);
@@ -594,8 +677,13 @@
             .clocks-section,
             .happening-section,
             .weather-section,
-            .calendar-section {
+            .calendar-section,
+            .media-section {
                 grid-template-columns: 1fr;
+            }
+
+            .media-grid {
+                grid-template-columns: 1fr 1fr;
             }
 
             .clock-panel {
@@ -611,9 +699,6 @@
                 padding: 1rem;
             }
 
-            .api-banner .api-input-group {
-                flex-direction: column;
-            }
         }
 
         /* ===== Animations ===== */
@@ -715,6 +800,123 @@
     <section class="calendar-section">
         <div class="calendar-panel calendar-cv" id="calendarCv"></div>
         <div class="calendar-panel calendar-ch" id="calendarCh"></div>
+    </section>
+
+    <!-- News & Media -->
+    <div class="section-title">
+        <h2>News &amp; Media</h2>
+        <p>Stay connected with what's happening back home</p>
+    </div>
+
+    <section class="media-section">
+        <div class="media-panel media-cv">
+            <h3>🇨🇻 Cabo Verde & Mindelo</h3>
+            <div class="media-grid">
+                <a href="https://mindelinsite.com/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">Mindel Insite</span>
+                        <span class="media-type">São Vicente news</span>
+                    </span>
+                </a>
+                <a href="https://www.balai.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">🌐</span>
+                    <span class="media-info">
+                        <span class="media-name">Balai</span>
+                        <span class="media-type">Aggregator</span>
+                    </span>
+                </a>
+                <a href="https://asemana.sapo.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">A Semana</span>
+                        <span class="media-type">Weekly newspaper</span>
+                    </span>
+                </a>
+                <a href="https://expressodasilhas.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">Expresso das Ilhas</span>
+                        <span class="media-type">Daily newspaper</span>
+                    </span>
+                </a>
+                <a href="https://inforpress.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">🏛️</span>
+                    <span class="media-info">
+                        <span class="media-name">Inforpress</span>
+                        <span class="media-type">News agency</span>
+                    </span>
+                </a>
+                <a href="https://anacao.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">A Nação</span>
+                        <span class="media-type">Newspaper</span>
+                    </span>
+                </a>
+                <a href="https://santiagomagazine.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📖</span>
+                    <span class="media-info">
+                        <span class="media-name">Santiago Magazine</span>
+                        <span class="media-type">Magazine</span>
+                    </span>
+                </a>
+                <a href="https://rtc.cv/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📺</span>
+                    <span class="media-info">
+                        <span class="media-name">RTC (TCV)</span>
+                        <span class="media-type">TV & Radio</span>
+                    </span>
+                </a>
+            </div>
+        </div>
+        <div class="media-panel media-ch">
+            <h3>🇨🇭 Lausanne & Vaud</h3>
+            <div class="media-grid">
+                <a href="https://www.rts.ch/info/regions/vaud/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📺</span>
+                    <span class="media-info">
+                        <span class="media-name">RTS Info</span>
+                        <span class="media-type">Public broadcaster</span>
+                    </span>
+                </a>
+                <a href="https://www.20min.ch/fr/suisse-romande/vaud" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">20 Minutes</span>
+                        <span class="media-type">Free daily</span>
+                    </span>
+                </a>
+                <a href="https://www.24heures.ch/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">24 Heures</span>
+                        <span class="media-type">Vaud daily</span>
+                    </span>
+                </a>
+                <a href="https://www.letemps.ch/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">Le Temps</span>
+                        <span class="media-type">Suisse romande</span>
+                    </span>
+                </a>
+                <a href="https://www.lematin.ch/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">📰</span>
+                    <span class="media-info">
+                        <span class="media-name">Le Matin</span>
+                        <span class="media-type">Tabloid</span>
+                    </span>
+                </a>
+                <a href="https://lausannecites.ch/" target="_blank" rel="noopener" class="media-link">
+                    <span class="media-icon">🏘️</span>
+                    <span class="media-info">
+                        <span class="media-name">Lausanne Cités</span>
+                        <span class="media-type">Local weekly</span>
+                    </span>
+                </a>
+            </div>
+        </div>
     </section>
 
     <!-- Neuroscience Tip -->
