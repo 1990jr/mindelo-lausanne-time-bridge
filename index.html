@@ -423,6 +423,67 @@
             padding: 1rem;
         }
 
+        /* ===== Sunrise / Sunset Section ===== */
+        .sun-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        .sun-panel {
+            padding: 1.5rem;
+            background: #ffffff;
+            text-align: center;
+        }
+
+        .sun-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sun-cv h3 { color: var(--cv-ocean); }
+        .sun-ch h3 { color: var(--ch-mountain); }
+
+        .sun-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        .sun-metric {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 0.65rem 0.5rem;
+        }
+
+        .sun-metric-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #6a7178;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .sun-metric-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1f2933;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sun-diff {
+            grid-column: 1 / -1;
+            background: #f4f6f9;
+            text-align: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            color: #44505c;
+            font-weight: 600;
+        }
+
         /* ===== Section Dividers ===== */
         .section-title {
             text-align: center;
@@ -777,6 +838,7 @@
             .happening-section,
             .work-hours-grid,
             .weather-section,
+            .sun-section,
             .calendar-section,
             .media-section {
                 grid-template-columns: 1fr;
@@ -797,6 +859,10 @@
 
             .happening-panel {
                 padding: 1rem;
+            }
+
+            .sun-grid {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -916,6 +982,28 @@
                 <div class="weather-error" id="weatherChLoading">Loading weather data...</div>
             </div>
         </div>
+    </section>
+
+    <!-- Sunrise / Sunset -->
+    <div class="section-title">
+        <h2 id="sunTitle">Sunrise &amp; Day Length</h2>
+        <p id="sunSubtitle">Today's sunlight in both cities</p>
+    </div>
+
+    <section class="sun-section">
+        <div class="sun-panel sun-cv">
+            <h3 id="sunCvTitle">🇨🇻 Mindelo Sun</h3>
+            <div id="sunCvContent">
+                <div class="weather-error">Loading solar data...</div>
+            </div>
+        </div>
+        <div class="sun-panel sun-ch">
+            <h3 id="sunChTitle">🇨🇭 Lausanne Sun</h3>
+            <div id="sunChContent">
+                <div class="weather-error">Loading solar data...</div>
+            </div>
+        </div>
+        <div class="sun-diff" id="sunDiff">Calculating daylight difference...</div>
     </section>
 
     <!-- Cultural Calendar -->
@@ -1116,6 +1204,19 @@
             weatherUnavailable: { en: 'Weather unavailable', fr: 'Météo indisponible', pt: 'Tempo indisponível' },
             weatherFetchError:  { en: 'Could not fetch weather data', fr: 'Impossible de récupérer la météo', pt: 'Não foi possível obter dados meteorológicos' },
             feelsLike:          { en: 'Feels', fr: 'Ressenti', pt: 'Sensação' },
+            sunTitle:           { en: 'Sunrise & Day Length', fr: 'Lever du soleil & durée du jour', pt: 'Nascer do sol e duração do dia' },
+            sunSubtitle:        { en: "Today's sunlight in both cities", fr: "Ensoleillement d'aujourd'hui dans les deux villes", pt: 'Luz solar de hoje nas duas cidades' },
+            sunCvTitle:         { en: '🇨🇻 Mindelo Sun', fr: '🇨🇻 Soleil à Mindelo', pt: '🇨🇻 Sol em Mindelo' },
+            sunChTitle:         { en: '🇨🇭 Lausanne Sun', fr: '🇨🇭 Soleil à Lausanne', pt: '🇨🇭 Sol em Lausanne' },
+            sunrise:            { en: 'Sunrise', fr: 'Lever', pt: 'Nascer' },
+            sunset:             { en: 'Sunset', fr: 'Coucher', pt: 'Pôr do sol' },
+            dayLength:          { en: 'Day Length', fr: 'Durée du jour', pt: 'Duração do dia' },
+            daylightDiffPrefix: { en: 'Daylight difference', fr: 'Différence de lumière', pt: 'Diferença de luz do dia' },
+            daylightLongerIn:   { en: 'longer in', fr: 'plus long à', pt: 'mais longo em' },
+            daylightSame:       { en: 'Same day length in both cities today', fr: 'Même durée du jour dans les deux villes aujourd’hui', pt: 'Mesma duração do dia nas duas cidades hoje' },
+            cityMindelo:        { en: 'Mindelo', fr: 'Mindelo', pt: 'Mindelo' },
+            cityLausanne:       { en: 'Lausanne', fr: 'Lausanne', pt: 'Lausanne' },
+            sunDataUnavailable: { en: 'Solar data unavailable', fr: 'Données solaires indisponibles', pt: 'Dados solares indisponíveis' },
 
             // ---- Calendar ----
             calendarTitle:      { en: 'Cultural Calendar', fr: 'Calendrier culturel', pt: 'Calendário cultural' },
@@ -1508,6 +1609,7 @@
                 'happeningLabelCv', 'happeningLabelCh',
                 'callTitle', 'callSubtitle', 'callHoursCvLabel', 'callHoursChLabel',
                 'weatherTitle', 'weatherSubtitle', 'weatherCvTitle', 'weatherChTitle',
+                'sunTitle', 'sunSubtitle', 'sunCvTitle', 'sunChTitle',
                 'calendarTitle', 'calendarSubtitle',
                 'mediaTitle', 'mediaSubtitle', 'mediaCvTitle', 'mediaChTitle',
                 'neuroTitle', 'footerText'
@@ -1764,11 +1866,70 @@
                 `<div class="weather-error">${msg}</div>`;
         }
 
+        function formatHHMMFromIso(isoString) {
+            if (!isoString || !isoString.includes('T')) return '--:--';
+            return isoString.split('T')[1].slice(0, 5);
+        }
+
+        function formatDayLength(seconds) {
+            if (typeof seconds !== 'number' || Number.isNaN(seconds)) return '--';
+            const totalMinutes = Math.floor(seconds / 60);
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            return `${hours}h ${minutes}m`;
+        }
+
+        function renderSun(containerId, daily) {
+            const sunrise = formatHHMMFromIso(daily.sunrise && daily.sunrise[0]);
+            const sunset = formatHHMMFromIso(daily.sunset && daily.sunset[0]);
+            const dayLength = formatDayLength(daily.daylight_duration && daily.daylight_duration[0]);
+
+            document.getElementById(containerId).innerHTML = `
+                <div class="sun-grid">
+                    <div class="sun-metric">
+                        <div class="sun-metric-label">${T.sunrise[currentLang]}</div>
+                        <div class="sun-metric-value">${sunrise}</div>
+                    </div>
+                    <div class="sun-metric">
+                        <div class="sun-metric-label">${T.sunset[currentLang]}</div>
+                        <div class="sun-metric-value">${sunset}</div>
+                    </div>
+                    <div class="sun-metric">
+                        <div class="sun-metric-label">${T.dayLength[currentLang]}</div>
+                        <div class="sun-metric-value">${dayLength}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSunError(containerId, msg) {
+            document.getElementById(containerId).innerHTML =
+                `<div class="weather-error">${msg}</div>`;
+        }
+
+        function renderSunDiff(cvDaylight, chDaylight) {
+            const diffEl = document.getElementById('sunDiff');
+            if (typeof cvDaylight !== 'number' || typeof chDaylight !== 'number') {
+                diffEl.textContent = T.sunDataUnavailable[currentLang];
+                return;
+            }
+
+            const diffSeconds = Math.abs(chDaylight - cvDaylight);
+            if (diffSeconds < 60) {
+                diffEl.textContent = T.daylightSame[currentLang];
+                return;
+            }
+
+            const city = chDaylight > cvDaylight ? T.cityLausanne[currentLang] : T.cityMindelo[currentLang];
+            diffEl.textContent = `${T.daylightDiffPrefix[currentLang]}: ${formatDayLength(diffSeconds)} ${T.daylightLongerIn[currentLang]} ${city}`;
+        }
+
         async function fetchWeather() {
             const cities = [
-                { lat: 16.89, lon: -24.98, tz: 'Atlantic/Cape_Verde', container: 'weatherCvContent' },
-                { lat: 46.52, lon: 6.63, tz: 'Europe/Zurich', container: 'weatherChContent' }
+                { key: 'cv', lat: 16.89, lon: -24.98, tz: 'Atlantic/Cape_Verde', weatherContainer: 'weatherCvContent', sunContainer: 'sunCvContent' },
+                { key: 'ch', lat: 46.52, lon: 6.63, tz: 'Europe/Zurich', weatherContainer: 'weatherChContent', sunContainer: 'sunChContent' }
             ];
+            const daylightByCity = { cv: null, ch: null };
 
             for (const city of cities) {
                 try {
@@ -1776,20 +1937,30 @@
                         `latitude=${city.lat}`,
                         `longitude=${city.lon}`,
                         'current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m',
+                        'daily=sunrise,sunset,daylight_duration',
                         `timezone=${encodeURIComponent(city.tz)}`
                     ].join('&');
                     const url = `https://api.open-meteo.com/v1/forecast?${params}`;
                     const res = await fetch(url);
                     if (!res.ok) {
-                        renderWeatherError(city.container, T.weatherUnavailable[currentLang] + ' (HTTP ' + res.status + ')');
+                        renderWeatherError(city.weatherContainer, T.weatherUnavailable[currentLang] + ' (HTTP ' + res.status + ')');
+                        renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang] + ' (HTTP ' + res.status + ')');
                         continue;
                     }
                     const data = await res.json();
-                    renderWeather(city.container, data.current);
+                    renderWeather(city.weatherContainer, data.current);
+                    if (data.daily && data.daily.sunrise && data.daily.sunset && data.daily.daylight_duration) {
+                        renderSun(city.sunContainer, data.daily);
+                        daylightByCity[city.key] = data.daily.daylight_duration[0];
+                    } else {
+                        renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang]);
+                    }
                 } catch (err) {
-                    renderWeatherError(city.container, T.weatherFetchError[currentLang]);
+                    renderWeatherError(city.weatherContainer, T.weatherFetchError[currentLang]);
+                    renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang]);
                 }
             }
+            renderSunDiff(daylightByCity.cv, daylightByCity.ch);
         }
 
         // ---- Cultural Calendar helpers ----
