@@ -13,3 +13,6 @@ Thumbs.db
 config.local.js
 .env
 .env.local
+
+# Local planning notes (not published)
+TODO.local.md

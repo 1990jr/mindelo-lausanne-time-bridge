@@ -298,6 +298,70 @@
             color: var(--text-dark);
         }
 
+        /* ===== Best Time To Call ===== */
+        .call-section {
+            background: #ffffff;
+            padding: 0 1.5rem 1.75rem;
+        }
+
+        .call-card {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #e4e6ea;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #ffffff, #f7f9fb);
+            padding: 1rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .call-status {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            color: var(--text-dark);
+        }
+
+        .call-next {
+            font-size: 0.9rem;
+            color: #4f5b67;
+            margin-bottom: 0.9rem;
+        }
+
+        .work-hours-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .hours-panel {
+            border-radius: 10px;
+            padding: 0.75rem;
+            background: #f8fafc;
+        }
+
+        .hours-cv {
+            border-left: 3px solid var(--cv-ocean);
+        }
+
+        .hours-ch {
+            border-left: 3px solid var(--ch-red);
+        }
+
+        .hours-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6a7178;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .hours-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1f2933;
+        }
+
         /* ===== Weather Section ===== */
         .weather-section {
             display: grid;
@@ -711,6 +775,7 @@
         @media (max-width: 700px) {
             .clocks-section,
             .happening-section,
+            .work-hours-grid,
             .weather-section,
             .calendar-section,
             .media-section {
@@ -806,6 +871,29 @@
             <div class="happening-label" id="happeningLabelCh">Right now in Lausanne</div>
             <span class="happening-emoji" id="happeningChEmoji">🏔️</span>
             <div class="happening-text" id="happeningCh">Loading...</div>
+        </div>
+    </section>
+
+    <!-- Best Time to Call -->
+    <div class="section-title">
+        <h2 id="callTitle">Best Time to Call</h2>
+        <p id="callSubtitle">Live overlap of local work hours</p>
+    </div>
+
+    <section class="call-section">
+        <div class="call-card">
+            <div class="call-status" id="callStatus">Checking overlap...</div>
+            <div class="call-next" id="callNext">Loading...</div>
+            <div class="work-hours-grid">
+                <div class="hours-panel hours-cv">
+                    <div class="hours-label" id="callHoursCvLabel">🇨🇻 Mindelo work hours</div>
+                    <div class="hours-value" id="workHoursCv">08:00-13:00, 14:00-18:00</div>
+                </div>
+                <div class="hours-panel hours-ch">
+                    <div class="hours-label" id="callHoursChLabel">🇨🇭 Lausanne work hours</div>
+                    <div class="hours-value" id="workHoursCh">09:00-18:00</div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -1003,6 +1091,21 @@
             // ---- Happening labels ----
             happeningLabelCv:   { en: 'Right now in Mindelo', fr: 'En ce moment à Mindelo', pt: 'Neste momento em Mindelo' },
             happeningLabelCh:   { en: 'Right now in Lausanne', fr: 'En ce moment à Lausanne', pt: 'Neste momento em Lausanne' },
+
+            // ---- Best time to call ----
+            callTitle:          { en: 'Best Time to Call', fr: 'Meilleur moment pour appeler', pt: 'Melhor horário para ligar' },
+            callSubtitle:       { en: 'Live overlap of local work hours', fr: "Chevauchement en direct des horaires de travail", pt: 'Sobreposição em tempo real dos horários de trabalho' },
+            callHoursCvLabel:   { en: '🇨🇻 Mindelo work hours', fr: '🇨🇻 Horaires de travail à Mindelo', pt: '🇨🇻 Horário de trabalho em Mindelo' },
+            callHoursChLabel:   { en: '🇨🇭 Lausanne work hours', fr: '🇨🇭 Horaires de travail à Lausanne', pt: '🇨🇭 Horário de trabalho em Lausanne' },
+            callHoursCvValue:   { en: '08:00-13:00, 14:00-18:00', fr: '08:00-13:00, 14:00-18:00', pt: '08:00-13:00, 14:00-18:00' },
+            callHoursChValue:   { en: '09:00-18:00', fr: '09:00-18:00', pt: '09:00-18:00' },
+            callStatusNow:      { en: 'Good moment to call now', fr: 'Bon moment pour appeler maintenant', pt: 'Bom momento para ligar agora' },
+            callStatusLater:    { en: 'Next overlap window', fr: 'Prochaine fenêtre commune', pt: 'Próxima janela em comum' },
+            callStatusNone:     { en: 'No overlap in the next 24 hours', fr: 'Aucun chevauchement dans les prochaines 24 heures', pt: 'Sem sobreposição nas próximas 24 horas' },
+            callUntil:          { en: 'Until', fr: "Jusqu'à", pt: 'Até' },
+            callNoWindow:       { en: 'Try again tomorrow', fr: 'Réessayez demain', pt: 'Tente novamente amanhã' },
+            callWindowPrefix:   { en: 'Lausanne', fr: 'Lausanne', pt: 'Lausanne' },
+            callWindowSuffix:   { en: 'Mindelo', fr: 'Mindelo', pt: 'Mindelo' },
 
             // ---- Weather ----
             weatherTitle:       { en: 'Weather Comparison', fr: 'Comparaison météo', pt: 'Comparação meteorológica' },
@@ -1403,6 +1506,7 @@
             const staticKeys = [
                 'subtitle', 'locationCv', 'locationCh',
                 'happeningLabelCv', 'happeningLabelCh',
+                'callTitle', 'callSubtitle', 'callHoursCvLabel', 'callHoursChLabel',
                 'weatherTitle', 'weatherSubtitle', 'weatherCvTitle', 'weatherChTitle',
                 'calendarTitle', 'calendarSubtitle',
                 'mediaTitle', 'mediaSubtitle', 'mediaCvTitle', 'mediaChTitle',
@@ -1424,6 +1528,8 @@
             // Update time diff text
             document.getElementById('timeDiffPrefix').textContent = T.timeDiffPrefix[lang];
             document.getElementById('timeDiffSuffix').textContent = T.timeDiffSuffix[lang];
+            document.getElementById('workHoursCv').textContent = T.callHoursCvValue[lang];
+            document.getElementById('workHoursCh').textContent = T.callHoursChValue[lang];
 
             // Re-render dynamic sections
             updateClocks();
@@ -1473,6 +1579,7 @@
             document.getElementById('tzMindelo').textContent = 'CVT (UTC−1)';
 
             updateHappening(now);
+            updateBestTimeToCall(now);
         }
 
         function getTimezoneOffset(date, tz) {
@@ -1494,6 +1601,103 @@
 
         function getHourInTZ(date, tz) {
             return parseInt(date.toLocaleString('en-GB', { timeZone: tz, hour: '2-digit', hour12: false }));
+        }
+
+        // ---- Call overlap ----
+        const WORK_HOURS = {
+            mindelo: [
+                { start: 8 * 60, end: 13 * 60 },
+                { start: 14 * 60, end: 18 * 60 }
+            ],
+            lausanne: [
+                { start: 9 * 60, end: 18 * 60 }
+            ]
+        };
+
+        function getMinutesInTZ(date, tz) {
+            const parts = new Intl.DateTimeFormat('en-GB', {
+                timeZone: tz,
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }).formatToParts(date);
+            const hour = parseInt(parts.find(p => p.type === 'hour').value, 10);
+            const minute = parseInt(parts.find(p => p.type === 'minute').value, 10);
+            return (hour * 60) + minute;
+        }
+
+        function isWithinWorkHours(minutes, windows) {
+            return windows.some(w => minutes >= w.start && minutes < w.end);
+        }
+
+        function isOverlapMoment(date) {
+            const mindeloMinutes = getMinutesInTZ(date, MINDELO_TZ);
+            const lausanneMinutes = getMinutesInTZ(date, LAUSANNE_TZ);
+            return isWithinWorkHours(mindeloMinutes, WORK_HOURS.mindelo) &&
+                   isWithinWorkHours(lausanneMinutes, WORK_HOURS.lausanne);
+        }
+
+        function getOverlapWindows(now) {
+            const stepMs = 15 * 60 * 1000;
+            const start = new Date(Math.floor(now.getTime() / stepMs) * stepMs);
+            const windows = [];
+            let activeStart = null;
+
+            for (let i = 0; i <= 96; i++) {
+                const slot = new Date(start.getTime() + (i * stepMs));
+                const active = isOverlapMoment(slot);
+
+                if (active && !activeStart) {
+                    activeStart = slot;
+                }
+
+                if ((!active || i === 96) && activeStart) {
+                    windows.push({ start: activeStart, end: slot });
+                    activeStart = null;
+                }
+            }
+
+            return windows;
+        }
+
+        function formatTimeInTZ(date, tz) {
+            return date.toLocaleTimeString(LOCALES[currentLang], {
+                timeZone: tz,
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
+        function formatOverlapWindow(window) {
+            const chStart = formatTimeInTZ(window.start, LAUSANNE_TZ);
+            const chEnd = formatTimeInTZ(window.end, LAUSANNE_TZ);
+            const cvStart = formatTimeInTZ(window.start, MINDELO_TZ);
+            const cvEnd = formatTimeInTZ(window.end, MINDELO_TZ);
+            return `${chStart}-${chEnd} ${T.callWindowPrefix[currentLang]} · ${cvStart}-${cvEnd} ${T.callWindowSuffix[currentLang]}`;
+        }
+
+        function updateBestTimeToCall(now) {
+            const windows = getOverlapWindows(now);
+            const currentWindow = windows.find(w => now >= w.start && now < w.end);
+            const nextWindow = windows.find(w => w.start > now);
+            const statusEl = document.getElementById('callStatus');
+            const nextEl = document.getElementById('callNext');
+
+            if (currentWindow) {
+                statusEl.textContent = T.callStatusNow[currentLang];
+                nextEl.textContent = `${T.callUntil[currentLang]} ${formatTimeInTZ(currentWindow.end, LAUSANNE_TZ)} ${T.callWindowPrefix[currentLang]} · ${formatTimeInTZ(currentWindow.end, MINDELO_TZ)} ${T.callWindowSuffix[currentLang]}`;
+                return;
+            }
+
+            if (nextWindow) {
+                statusEl.textContent = T.callStatusLater[currentLang];
+                nextEl.textContent = formatOverlapWindow(nextWindow);
+                return;
+            }
+
+            statusEl.textContent = T.callStatusNone[currentLang];
+            nextEl.textContent = T.callNoWindow[currentLang];
         }
 
         // ---- What's Happening Now ----
