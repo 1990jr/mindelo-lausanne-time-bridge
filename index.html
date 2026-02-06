@@ -423,6 +423,13 @@
             padding: 1rem;
         }
 
+        .weather-meta {
+            margin-top: 0.8rem;
+            font-size: 0.75rem;
+            color: #7a828b;
+            font-weight: 500;
+        }
+
         /* ===== Sunrise / Sunset Section ===== */
         .sun-section {
             display: grid;
@@ -975,12 +982,14 @@
             <div id="weatherCvContent">
                 <div class="weather-error" id="weatherCvLoading">Loading weather data...</div>
             </div>
+            <div class="weather-meta" id="weatherCvMeta">Updated: --</div>
         </div>
         <div class="weather-panel weather-ch" id="weatherCh">
             <h3 id="weatherChTitle">🇨🇭 Lausanne Weather</h3>
             <div id="weatherChContent">
                 <div class="weather-error" id="weatherChLoading">Loading weather data...</div>
             </div>
+            <div class="weather-meta" id="weatherChMeta">Updated: --</div>
         </div>
     </section>
 
@@ -1204,6 +1213,14 @@
             weatherUnavailable: { en: 'Weather unavailable', fr: 'Météo indisponible', pt: 'Tempo indisponível' },
             weatherFetchError:  { en: 'Could not fetch weather data', fr: 'Impossible de récupérer la météo', pt: 'Não foi possível obter dados meteorológicos' },
             feelsLike:          { en: 'Feels', fr: 'Ressenti', pt: 'Sensação' },
+            updatedLabel:       { en: 'Updated', fr: 'Mis à jour', pt: 'Atualizado' },
+            updatedJustNow:     { en: 'just now', fr: "à l'instant", pt: 'agora mesmo' },
+            minute:             { en: 'min', fr: 'min', pt: 'min' },
+            minutes:            { en: 'min', fr: 'min', pt: 'min' },
+            ago:                { en: 'ago', fr: '', pt: 'atrás' },
+            usingCachedData:    { en: 'using cached data', fr: 'données en cache', pt: 'usando dados em cache' },
+            offlineMode:        { en: 'offline mode', fr: 'mode hors ligne', pt: 'modo offline' },
+            weatherNoData:      { en: 'No live or cached weather data', fr: 'Aucune donnée météo en direct ou en cache', pt: 'Sem dados meteorológicos ao vivo ou em cache' },
             sunTitle:           { en: 'Sunrise & Day Length', fr: 'Lever du soleil & durée du jour', pt: 'Nascer do sol e duração do dia' },
             sunSubtitle:        { en: "Today's sunlight in both cities", fr: "Ensoleillement d'aujourd'hui dans les deux villes", pt: 'Luz solar de hoje nas duas cidades' },
             sunCvTitle:         { en: '🇨🇻 Mindelo Sun', fr: '🇨🇻 Soleil à Mindelo', pt: '🇨🇻 Sol em Mindelo' },
@@ -1638,6 +1655,7 @@
             updateHappening(new Date());
             renderCalendar();
             renderNeuroTip();
+            refreshWeatherMeta();
             // Re-fetch weather to re-render with correct language
             fetchWeather();
         }
@@ -1682,6 +1700,7 @@
 
             updateHappening(now);
             updateBestTimeToCall(now);
+            refreshWeatherMeta();
         }
 
         function getTimezoneOffset(date, tz) {
@@ -1824,6 +1843,63 @@
         }
 
         // ---- Weather (Open-Meteo — free, no API key needed) ----
+        const WEATHER_CACHE_KEY = 'timeBridgeWeatherCacheV1';
+        const WEATHER_META_IDS = { cv: 'weatherCvMeta', ch: 'weatherChMeta' };
+        let weatherCache = loadWeatherCache();
+        const weatherMeta = {
+            cv: null,
+            ch: null
+        };
+
+        function loadWeatherCache() {
+            try {
+                const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (err) {
+                return {};
+            }
+        }
+
+        function saveWeatherCache() {
+            try {
+                localStorage.setItem(WEATHER_CACHE_KEY, JSON.stringify(weatherCache));
+            } catch (err) {
+                // Ignore storage failures (quota/private mode), live fetch still works.
+            }
+        }
+
+        function formatUpdatedAgo(timestamp) {
+            if (!timestamp) return '--';
+            const diffMin = Math.floor((Date.now() - timestamp) / 60000);
+            if (diffMin <= 0) {
+                return `${T.updatedLabel[currentLang]}: ${T.updatedJustNow[currentLang]}`;
+            }
+            const agoPart = T.ago[currentLang] ? ` ${T.ago[currentLang]}` : '';
+            return `${T.updatedLabel[currentLang]}: ${diffMin} ${diffMin === 1 ? T.minute[currentLang] : T.minutes[currentLang]}${agoPart}`;
+        }
+
+        function refreshWeatherMeta() {
+            Object.keys(WEATHER_META_IDS).forEach(key => {
+                const el = document.getElementById(WEATHER_META_IDS[key]);
+                if (!el) return;
+                const meta = weatherMeta[key];
+                if (!meta) {
+                    el.textContent = `${T.updatedLabel[currentLang]}: --`;
+                    return;
+                }
+                if (meta.messageKey && T[meta.messageKey]) {
+                    el.textContent = T[meta.messageKey][currentLang];
+                    return;
+                }
+                let text = formatUpdatedAgo(meta.fetchedAt);
+                if (meta.source === 'cache') {
+                    text += ` · ${T.usingCachedData[currentLang]}`;
+                    if (meta.offline) text += ` · ${T.offlineMode[currentLang]}`;
+                }
+                el.textContent = text;
+            });
+        }
+
         const WMO_EMOJIS = {
             0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
             45: '🌫️', 48: '🌫️',
@@ -1931,6 +2007,16 @@
             ];
             const daylightByCity = { cv: null, ch: null };
 
+            function renderFromPayload(city, payload) {
+                renderWeather(city.weatherContainer, payload.current);
+                if (payload.daily && payload.daily.sunrise && payload.daily.sunset && payload.daily.daylight_duration) {
+                    renderSun(city.sunContainer, payload.daily);
+                    daylightByCity[city.key] = payload.daily.daylight_duration[0];
+                } else {
+                    renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang]);
+                }
+            }
+
             for (const city of cities) {
                 try {
                     const params = [
@@ -1943,24 +2029,33 @@
                     const url = `https://api.open-meteo.com/v1/forecast?${params}`;
                     const res = await fetch(url);
                     if (!res.ok) {
-                        renderWeatherError(city.weatherContainer, T.weatherUnavailable[currentLang] + ' (HTTP ' + res.status + ')');
-                        renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang] + ' (HTTP ' + res.status + ')');
-                        continue;
+                        throw new Error('HTTP ' + res.status);
                     }
                     const data = await res.json();
-                    renderWeather(city.weatherContainer, data.current);
-                    if (data.daily && data.daily.sunrise && data.daily.sunset && data.daily.daylight_duration) {
-                        renderSun(city.sunContainer, data.daily);
-                        daylightByCity[city.key] = data.daily.daylight_duration[0];
-                    } else {
-                        renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang]);
-                    }
+                    renderFromPayload(city, data);
+
+                    const fetchedAt = Date.now();
+                    weatherCache[city.key] = { payload: data, fetchedAt };
+                    weatherMeta[city.key] = { fetchedAt, source: 'live', offline: false };
                 } catch (err) {
-                    renderWeatherError(city.weatherContainer, T.weatherFetchError[currentLang]);
-                    renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang]);
+                    const cached = weatherCache[city.key];
+                    if (cached && cached.payload) {
+                        renderFromPayload(city, cached.payload);
+                        weatherMeta[city.key] = {
+                            fetchedAt: cached.fetchedAt || Date.now(),
+                            source: 'cache',
+                            offline: !navigator.onLine
+                        };
+                    } else {
+                        renderWeatherError(city.weatherContainer, T.weatherFetchError[currentLang]);
+                        renderSunError(city.sunContainer, T.sunDataUnavailable[currentLang]);
+                        weatherMeta[city.key] = { messageKey: 'weatherNoData' };
+                    }
                 }
             }
+            saveWeatherCache();
             renderSunDiff(daylightByCity.cv, daylightByCity.ch);
+            refreshWeatherMeta();
         }
 
         // ---- Cultural Calendar helpers ----
