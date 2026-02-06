@@ -27,7 +27,11 @@ Single-page static web app connecting Mindelo (Cabo Verde) and Lausanne (Switzer
 ### Cultural Calendar
 - Easter date is computed algorithmically (Anonymous Gregorian algorithm) to derive moveable holidays
 - Cabo Verde: all national public holidays + Mindelo-specific events (Carnaval, São Vicente Day, Baía das Gatas, São João/Kola San Djon, Mindelact, Réveillon)
-- Switzerland: Vaud canton official holidays only (9 days) — no Labour Day or St. Stephen's Day (not observed in Vaud)
+- Lausanne & Vaud: 9 official Vaud holidays + 14 festivals/cultural events
+  - Festivals: Prix de Lausanne, BDFIL, Balélec, Festival de la Cité, Montreux Jazz, Paléo Nyon, LUFF, Les Urbaines, Bô Noël
+  - Sports: Athletissima (Diamond League), Lausanne Marathon
+  - Wine: Caves Ouvertes Vaudoises, Vendanges in Lavaux
+  - Music: Fête de la Musique
 - Federal Fast Monday calculated dynamically (Monday after 3rd Sunday of September)
 - Past events are shown dimmed and sorted after upcoming ones
 

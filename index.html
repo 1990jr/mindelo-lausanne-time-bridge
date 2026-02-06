@@ -881,17 +881,33 @@
                 { date: `${year}-12-31`, name: "Réveillon", desc: "New Year's Eve — major concert on Rua de Lisboa" }
             ];
 
-            // ---- Switzerland (Vaud canton): Official holidays + Lausanne events ----
+            // ---- Lausanne & Vaud: Official holidays + festivals + cultural events ----
             const chEvents = [
+                // Public holidays (Vaud canton)
                 { date: `${year}-01-01`, name: "Nouvel An", desc: "New Year's Day" },
-                { date: `${year}-01-02`, name: "Saint-Berchtold", desc: "Berchtoldstag — Vaud cantonal holiday, unique to Lausanne's region" },
-                { date: fmt(goodFriday), name: "Vendredi Saint", desc: "Good Friday — a quiet Swiss holiday" },
+                { date: `${year}-01-02`, name: "Saint-Berchtold", desc: "Vaud cantonal holiday, unique to Lausanne's region" },
+                { date: fmt(goodFriday), name: "Vendredi Saint", desc: "Good Friday" },
                 { date: fmt(easterMonday), name: "Lundi de Pâques", desc: "Easter Monday — chocolate eggs and family brunches" },
                 { date: fmt(ascension), name: "Ascension", desc: "Ascension Day — a Thursday off, long weekend tradition" },
                 { date: fmt(whitMonday), name: "Lundi de Pentecôte", desc: "Whit Monday" },
                 { date: `${year}-08-01`, name: "Fête nationale", desc: "Swiss National Day — fireworks, bonfires, and fondue" },
-                { date: fmt(federalFast), name: "Lundi du Jeûne fédéral", desc: "Federal Fast Monday — Vaud tradition, unique to the region" },
-                { date: `${year}-12-25`, name: "Noël", desc: "Christmas Day — fondue, raclette, and vin chaud" }
+                { date: fmt(federalFast), name: "Lundi du Jeûne fédéral", desc: "Federal Fast Monday — Vaud tradition" },
+                { date: `${year}-12-25`, name: "Noël", desc: "Christmas Day — fondue, raclette, and vin chaud" },
+                // Lausanne festivals & cultural events
+                { date: `${year}-02-01`, name: "Prix de Lausanne", desc: "Prestigious international ballet competition for young dancers (early February)" },
+                { date: `${year}-04-27`, name: "BDFIL", desc: "Lausanne International Comics Festival — two weeks in the train station quarter" },
+                { date: `${year}-05-01`, name: "Balélec", desc: "EPFL's massive open-air student festival — one of the largest in Europe" },
+                { date: `${year}-05-23`, name: "Caves Ouvertes Vaudoises", desc: "200+ Vaud winemakers open their doors — Chasselas tastings across Lavaux" },
+                { date: `${year}-06-21`, name: "Fête de la Musique", desc: "Free city-wide music festival — stages pop up across Lausanne" },
+                { date: `${year}-06-30`, name: "Festival de la Cité", desc: "Free multi-arts festival — theatre, dance, music in Lausanne's old town (early July)" },
+                { date: `${year}-07-04`, name: "Montreux Jazz Festival", desc: "Legendary two-week jazz & music festival on Lake Geneva (mid-July)" },
+                { date: `${year}-07-21`, name: "Paléo Festival Nyon", desc: "Switzerland's biggest open-air festival — 230,000 spectators over 6 days" },
+                { date: `${year}-08-21`, name: "Athletissima", desc: "Diamond League athletics meeting at the Olympic Stadium" },
+                { date: `${year}-09-26`, name: "Vendanges in Lavaux", desc: "Wine harvest season — vineyard experiences in the UNESCO Lavaux terraces" },
+                { date: `${year}-10-14`, name: "LUFF", desc: "Lausanne Underground Film & Music Festival — avant-garde cinema and sound" },
+                { date: `${year}-10-25`, name: "Lausanne Marathon", desc: "Scenic marathon along Lake Geneva — from Place de Milan to Ouchy" },
+                { date: `${year}-11-20`, name: "Bô Noël", desc: "Lausanne's Christmas markets, light installations, and festive events until Dec 31" },
+                { date: `${year}-12-05`, name: "Les Urbaines", desc: "Free festival of artistic experimentation — sound, visual, and performing arts" }
             ];
 
             return { cvEvents, chEvents };
@@ -934,7 +950,7 @@
             }
 
             renderEvents(cvEvents, 'calendarCv', '🇨🇻', 'Cabo Verde & Mindelo');
-            renderEvents(chEvents, 'calendarCh', '🇨🇭', 'Switzerland');
+            renderEvents(chEvents, 'calendarCh', '🇨🇭', 'Lausanne & Vaud');
         }
 
         // ---- Neuroscience Tips ----
