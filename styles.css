@@ -1,0 +1,886 @@
+        /* ===== CSS Reset & Variables ===== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Cabo Verde palette */
+            --cv-ocean: #0077b6;
+            --cv-deep: #023e8a;
+            --cv-sky: #48cae4;
+            --cv-sand: #f4a261;
+            --cv-warm: #e76f51;
+            --cv-light: #caf0f8;
+            --cv-gradient: linear-gradient(135deg, #023e8a 0%, #0077b6 40%, #48cae4 70%, #f4a261 100%);
+
+            /* Swiss palette */
+            --ch-red: #d62828;
+            --ch-mountain: #2d6a4f;
+            --ch-snow: #f8f9fa;
+            --ch-slate: #495057;
+            --ch-lake: #457b9d;
+            --ch-cream: #fefae0;
+            --ch-gradient: linear-gradient(135deg, #495057 0%, #457b9d 30%, #2d6a4f 60%, #f8f9fa 100%);
+
+            /* Shared */
+            --bridge-gold: #d4a373;
+            --text-dark: #1a1a2e;
+            --text-light: #f8f9fa;
+            --font-body: 'Inter', -apple-system, sans-serif;
+            --font-display: 'Playfair Display', Georgia, serif;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-dark);
+            background: #f0f0f5;
+            overflow-x: hidden;
+        }
+
+        /* ===== Header / Bridge ===== */
+        .bridge-header {
+            background: linear-gradient(135deg, var(--cv-deep) 0%, var(--bridge-gold) 50%, var(--ch-mountain) 100%);
+            padding: 1.5rem 1rem 1rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bridge-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+
+        .bridge-header h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-weight: 700;
+            position: relative;
+            z-index: 1;
+        }
+
+        .bridge-header h1 .bridge-icon {
+            display: inline-block;
+            margin: 0 0.3em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .bridge-header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.85;
+            margin-top: 0.3rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 300;
+        }
+
+        /* ===== Language Switcher ===== */
+        .lang-switcher {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .lang-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.8);
+            padding: 0.25rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: var(--font-body);
+            letter-spacing: 0.5px;
+        }
+
+        .lang-btn:hover {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: var(--text-dark);
+            border-color: white;
+        }
+
+        /* ===== Time Difference Banner ===== */
+        .time-diff-banner {
+            background: var(--text-dark);
+            color: var(--text-light);
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .time-diff-banner span {
+            color: var(--bridge-gold);
+        }
+
+        /* ===== Dual Clock Section ===== */
+        .clocks-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 320px;
+        }
+
+        .clock-panel {
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clock-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0.08;
+            z-index: 0;
+        }
+
+        .clock-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Cabo Verde panel */
+        .clock-cv {
+            background: linear-gradient(180deg, #023e8a 0%, #0077b6 60%, #48cae4 100%);
+            color: white;
+        }
+
+        .clock-cv::before {
+            background:
+                radial-gradient(ellipse at 50% 120%, rgba(244, 162, 97, 0.3) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cpath d='M0,160 Q50,140 100,155 T200,150 T300,145 T400,160 L400,200 L0,200 Z' fill='%23f4a261' opacity='0.15'/%3E%3Cpath d='M0,170 Q60,155 120,165 T240,160 T360,158 T400,170 L400,200 L0,200 Z' fill='%2348cae4' opacity='0.1'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        /* Swiss panel */
+        .clock-ch {
+            background: linear-gradient(180deg, #457b9d 0%, #a8dadc 40%, #f1faee 100%);
+            color: var(--text-dark);
+        }
+
+        .clock-ch::before {
+            background:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 200'%3E%3Cpath d='M0,120 L40,80 L80,110 L130,50 L180,90 L220,40 L270,85 L320,55 L360,95 L400,70 L400,200 L0,200 Z' fill='%232d6a4f' opacity='0.08'/%3E%3Cpath d='M0,150 L50,120 L100,140 L160,100 L210,130 L260,95 L310,125 L370,105 L400,120 L400,200 L0,200 Z' fill='%23495057' opacity='0.05'/%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: bottom;
+        }
+
+        .clock-location {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-bottom: 0.25rem;
+        }
+
+        .clock-city {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 4vw, 2.8rem);
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .clock-flag {
+            font-size: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .clock-time {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .clock-seconds {
+            font-size: 0.5em;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        .clock-date {
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .clock-timezone {
+            font-size: 0.75rem;
+            opacity: 0.6;
+            margin-top: 0.25rem;
+            font-weight: 500;
+        }
+
+        /* ===== "What's Happening Now" Section ===== */
+        .happening-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .happening-panel {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .happening-cv {
+            background: linear-gradient(135deg, #caf0f8, #e8f8ff);
+            border-bottom: 3px solid var(--cv-ocean);
+        }
+
+        .happening-ch {
+            background: linear-gradient(135deg, #f1faee, #fefae0);
+            border-bottom: 3px solid var(--ch-mountain);
+        }
+
+        .happening-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .happening-emoji {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .happening-text {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        /* ===== Best Time To Call ===== */
+        .call-section {
+            background: #ffffff;
+            padding: 0 1.5rem 1.75rem;
+        }
+
+        .call-card {
+            max-width: 900px;
+            margin: 0 auto;
+            border: 1px solid #e4e6ea;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #ffffff, #f7f9fb);
+            padding: 1rem;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+        }
+
+        .call-status {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            color: var(--text-dark);
+        }
+
+        .call-next {
+            font-size: 0.9rem;
+            color: #4f5b67;
+            margin-bottom: 0.9rem;
+        }
+
+        .work-hours-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+        }
+
+        .hours-panel {
+            border-radius: 10px;
+            padding: 0.75rem;
+            background: #f8fafc;
+        }
+
+        .hours-cv {
+            border-left: 3px solid var(--cv-ocean);
+        }
+
+        .hours-ch {
+            border-left: 3px solid var(--ch-red);
+        }
+
+        .hours-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #6a7178;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .hours-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #1f2933;
+        }
+
+        /* ===== Weather Section ===== */
+        .weather-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        .weather-panel {
+            padding: 1.5rem;
+            background: white;
+            text-align: center;
+        }
+
+        .weather-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .weather-cv h3 { color: var(--cv-ocean); }
+        .weather-ch h3 { color: var(--ch-mountain); }
+
+        .weather-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .weather-temp {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .weather-desc {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: capitalize;
+            margin-top: 0.25rem;
+        }
+
+        .weather-details {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .weather-details span {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .weather-error {
+            font-size: 0.85rem;
+            color: #999;
+            padding: 1rem;
+        }
+
+        .weather-meta {
+            margin-top: 0.8rem;
+            font-size: 0.75rem;
+            color: #7a828b;
+            font-weight: 500;
+        }
+
+        /* ===== Sunrise / Sunset Section ===== */
+        .sun-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        .sun-panel {
+            padding: 1.5rem;
+            background: #ffffff;
+            text-align: center;
+        }
+
+        .sun-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sun-cv h3 { color: var(--cv-ocean); }
+        .sun-ch h3 { color: var(--ch-mountain); }
+
+        .sun-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        .sun-metric {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 0.65rem 0.5rem;
+        }
+
+        .sun-metric-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #6a7178;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .sun-metric-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #1f2933;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sun-diff {
+            grid-column: 1 / -1;
+            background: #f4f6f9;
+            text-align: center;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            color: #44505c;
+            font-weight: 600;
+        }
+
+        /* ===== Section Dividers ===== */
+        .section-title {
+            text-align: center;
+            padding: 1.5rem 1rem 0.75rem;
+            background: #f0f0f5;
+        }
+
+        .section-title h2 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--text-dark);
+        }
+
+        .section-title p {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        /* ===== Cultural Calendar ===== */
+        .calendar-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 0 1rem 1rem;
+            background: #f0f0f5;
+        }
+
+        .calendar-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .calendar-header h3 {
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .calendar-cv .calendar-header h3 { color: var(--cv-ocean); }
+        .calendar-ch .calendar-header h3 { color: var(--ch-mountain); }
+
+        .event-count {
+            font-family: var(--font-body);
+            font-size: 0.65rem;
+            font-weight: 600;
+            background: #eee;
+            color: #888;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            letter-spacing: 0.3px;
+        }
+
+        /* Next up highlight */
+        .calendar-next {
+            padding: 0.9rem 1.25rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .calendar-cv .calendar-next {
+            background: linear-gradient(135deg, #e8f4fd, #caf0f8);
+            border-bottom: 2px solid var(--cv-ocean);
+        }
+
+        .calendar-ch .calendar-next {
+            background: linear-gradient(135deg, #edf6f0, #dceee4);
+            border-bottom: 2px solid var(--ch-mountain);
+        }
+
+        .next-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            opacity: 0.6;
+            margin-bottom: 0.15rem;
+        }
+
+        .calendar-next .event-date {
+            background: white;
+            border-radius: 8px;
+            padding: 0.35rem 0.55rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+            min-width: 52px;
+            text-align: center;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .calendar-cv .calendar-next .event-date { border-left: 3px solid var(--cv-ocean); }
+        .calendar-ch .calendar-next .event-date { border-left: 3px solid var(--ch-mountain); }
+
+        .calendar-next .event-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .calendar-next .event-desc {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 0.1rem;
+        }
+
+        /* Scrollable list */
+        .calendar-list-wrapper {
+            position: relative;
+        }
+
+        .calendar-list {
+            max-height: 280px;
+            overflow-y: auto;
+            padding: 0.25rem 1.25rem 0.75rem;
+            scrollbar-width: thin;
+            scrollbar-color: #ccc transparent;
+        }
+
+        .calendar-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .calendar-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .calendar-list::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 4px;
+        }
+
+        .calendar-fade {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, white);
+            pointer-events: none;
+            border-radius: 0 0 12px 12px;
+            transition: opacity 0.2s;
+        }
+
+        .calendar-fade.hidden {
+            opacity: 0;
+        }
+
+        .event-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex;
+            gap: 0.65rem;
+            align-items: flex-start;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-date {
+            background: #f8f8f8;
+            border-radius: 6px;
+            padding: 0.25rem 0.45rem;
+            font-size: 0.65rem;
+            font-weight: 600;
+            white-space: nowrap;
+            min-width: 48px;
+            text-align: center;
+            color: #555;
+        }
+
+        .calendar-cv .event-date { border-left: 3px solid var(--cv-ocean); }
+        .calendar-ch .event-date { border-left: 3px solid var(--ch-red); }
+
+        .event-info {
+            flex: 1;
+        }
+
+        .event-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .event-desc {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 0.1rem;
+        }
+
+        .event-past {
+            opacity: 0.4;
+        }
+
+        /* ===== News & Media ===== */
+        .media-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            padding: 0 1rem 1rem;
+            background: #f0f0f5;
+        }
+
+        .media-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 1.25rem;
+        }
+
+        .media-panel h3 {
+            font-family: var(--font-display);
+            font-size: 1rem;
+            margin-bottom: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .media-cv h3 { color: var(--cv-ocean); }
+        .media-ch h3 { color: var(--ch-mountain); }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .media-link {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.55rem 0.7rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-dark);
+            background: #f8f9fa;
+            border: 1px solid #eee;
+            transition: all 0.15s ease;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .media-link:hover {
+            background: #eef2ff;
+            border-color: #c5cae9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+
+        .media-link .media-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .media-link .media-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .media-link .media-name {
+            font-weight: 600;
+            font-size: 0.78rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .media-link .media-type {
+            font-size: 0.6rem;
+            color: #999;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== Neuroscience Tip ===== */
+        .neuro-section {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .neuro-section h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .neuro-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--bridge-gold);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .neuro-tip {
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1rem;
+            line-height: 1.7;
+            font-weight: 300;
+        }
+
+        .neuro-emoji {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .neuro-source {
+            font-size: 0.7rem;
+            opacity: 0.5;
+            margin-top: 1rem;
+        }
+
+        /* ===== Footer ===== */
+        .bridge-footer {
+            background: var(--text-dark);
+            color: rgba(255,255,255,0.5);
+            text-align: center;
+            padding: 1.25rem;
+            font-size: 0.75rem;
+        }
+
+        .bridge-footer .hearts {
+            color: var(--bridge-gold);
+            margin: 0 0.25rem;
+        }
+
+        /* ===== Mobile Responsive ===== */
+        @media (max-width: 700px) {
+            .clocks-section,
+            .happening-section,
+            .work-hours-grid,
+            .weather-section,
+            .sun-section,
+            .calendar-section,
+            .media-section {
+                grid-template-columns: 1fr;
+            }
+
+            .media-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .clock-panel {
+                padding: 1.5rem 1rem;
+                min-height: auto;
+            }
+
+            .clock-time {
+                font-size: 3rem;
+            }
+
+            .happening-panel {
+                padding: 1rem;
+            }
+
+            .sun-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== Animations ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Smooth time transition */
+        .clock-time {
+            transition: opacity 0.15s ease;
+        }
