@@ -35,13 +35,14 @@
 
             // ---- Best time to call ----
             callTitle:          { en: 'Best Time to Call', fr: 'Meilleur moment pour appeler', pt: 'Melhor horário para ligar' },
-            callSubtitle:       { en: 'Weekend overlap when both cities are awake', fr: "Chevauchement du week-end quand les deux villes sont réveillées", pt: 'Sobreposição no fim de semana quando as duas cidades estão acordadas' },
+            callSubtitle:       { en: 'Best overlap when both cities are awake and off work', fr: "Meilleur chevauchement quand les deux villes sont réveillées et hors travail", pt: 'Melhor sobreposição quando as duas cidades estão acordadas e fora do trabalho' },
             callHoursCvLabel:   { en: '🇨🇻 Mindelo call window', fr: "🇨🇻 Fenêtre d'appel à Mindelo", pt: '🇨🇻 Janela para ligar em Mindelo' },
             callHoursChLabel:   { en: '🇨🇭 Lausanne call window', fr: "🇨🇭 Fenêtre d'appel à Lausanne", pt: '🇨🇭 Janela para ligar em Lausanne' },
-            callHoursCvValue:   { en: 'Sat-Sun, 08:00-21:00', fr: 'Sam-Dim, 08:00-21:00', pt: 'Sáb-Dom, 08:00-21:00' },
-            callHoursChValue:   { en: 'Sat-Sun, 08:00-21:00', fr: 'Sam-Dim, 08:00-21:00', pt: 'Sáb-Dom, 08:00-21:00' },
+            callHoursCvValue:   { en: 'Awake: 08:00-21:00 · Work (Mon-Fri): 08:00-13:00, 14:00-18:00', fr: 'Réveil: 08:00-21:00 · Travail (Lun-Ven): 08:00-13:00, 14:00-18:00', pt: 'Acordado: 08:00-21:00 · Trabalho (Seg-Sex): 08:00-13:00, 14:00-18:00' },
+            callHoursChValue:   { en: 'Awake: 08:00-21:00 · Work (Mon-Fri): 09:00-18:00', fr: 'Réveil: 08:00-21:00 · Travail (Lun-Ven): 09:00-18:00', pt: 'Acordado: 08:00-21:00 · Trabalho (Seg-Sex): 09:00-18:00' },
             callStatusNow:      { en: 'Good moment to call now', fr: 'Bon moment pour appeler maintenant', pt: 'Bom momento para ligar agora' },
             callStatusLater:    { en: 'Next overlap window', fr: 'Prochaine fenêtre commune', pt: 'Próxima janela em comum' },
+            callStatusNextStarts: { en: 'Next window starts', fr: 'Prochaine fenêtre à partir de', pt: 'Próxima janela começa' },
             callStatusNone:     { en: 'No overlap in the next 7 days', fr: 'Aucun chevauchement dans les 7 prochains jours', pt: 'Sem sobreposição nos próximos 7 dias' },
             callUntil:          { en: 'Until', fr: "Jusqu'à", pt: 'Até' },
             callNoWindow:       { en: 'Check next weekend', fr: 'Vérifiez le week-end prochain', pt: 'Verifique no próximo fim de semana' },
@@ -760,6 +761,16 @@
             return `${chStart}-${chEnd} ${T.callWindowPrefix[currentLang]} · ${cvStart}-${cvEnd} ${T.callWindowSuffix[currentLang]}`;
         }
 
+        function formatDayTimeInTZ(date, tz) {
+            return date.toLocaleString(LOCALES[currentLang], {
+                timeZone: tz,
+                weekday: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+        }
+
         function updateBestTimeToCall(now) {
             const windows = getOverlapWindows(now, { mindeloTz: MINDELO_TZ, lausanneTz: LAUSANNE_TZ });
             const currentWindow = windows.find(w => now >= w.start && now < w.end);
@@ -775,7 +786,7 @@
 
             if (nextWindow) {
                 statusEl.textContent = T.callStatusLater[currentLang];
-                nextEl.textContent = formatOverlapWindow(nextWindow);
+                nextEl.textContent = `${T.callStatusNextStarts[currentLang]} ${formatDayTimeInTZ(nextWindow.start, LAUSANNE_TZ)} ${T.callWindowPrefix[currentLang]} · ${formatDayTimeInTZ(nextWindow.start, MINDELO_TZ)} ${T.callWindowSuffix[currentLang]}`;
                 return;
             }
 

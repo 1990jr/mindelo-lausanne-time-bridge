@@ -7,12 +7,16 @@ const options = {
   lausanneTz: 'Europe/Zurich',
 };
 
-test('isOverlapMoment is true on weekend daytime and false on weekday', () => {
-  const saturdayNoonUtc = new Date('2026-02-07T12:00:00Z');
-  const mondayNoonUtc = new Date('2026-02-09T12:00:00Z');
+test('isOverlapMoment depends on awake and non-working hours in both cities', () => {
+  const saturdayNoonUtc = new Date('2026-02-07T12:00:00Z'); // weekend, both awake
+  const mondayNoonUtc = new Date('2026-02-09T12:00:00Z');   // both working
+  const mondayEarlyEveningUtc = new Date('2026-02-09T19:30:00Z'); // both off work and awake
+  const mondayLateUtc = new Date('2026-02-09T21:30:00Z'); // Lausanne sleeping
 
   assert.equal(isOverlapMoment(saturdayNoonUtc, options), true);
   assert.equal(isOverlapMoment(mondayNoonUtc, options), false);
+  assert.equal(isOverlapMoment(mondayEarlyEveningUtc, options), true);
+  assert.equal(isOverlapMoment(mondayLateUtc, options), false);
 });
 
 test('getOverlapWindows returns windows within the configured search horizon', () => {
