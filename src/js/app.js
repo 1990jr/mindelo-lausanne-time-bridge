@@ -13,9 +13,15 @@
         // ---- Configuration ----
         const MINDELO_TZ = 'Atlantic/Cape_Verde';  // UTC-1 year-round
         const LAUSANNE_TZ = 'Europe/Zurich';        // CET/CEST
+        const AI_ENDPOINT = (
+            (window.TIME_BRIDGE_CONFIG && window.TIME_BRIDGE_CONFIG.aiEndpoint) ||
+            localStorage.getItem('timeBridgeAiEndpoint') ||
+            ''
+        ).trim();
 
         // ---- i18n Translations ----
         let currentLang = localStorage.getItem('timeBridgeLang') || 'en';
+        let aiHasGenerated = false;
 
         const LOCALES = { en: 'en-GB', fr: 'fr-FR', pt: 'pt-PT' };
 
@@ -48,6 +54,16 @@
             callNoWindow:       { en: 'Check next weekend', fr: 'Vérifiez le week-end prochain', pt: 'Verifique no próximo fim de semana' },
             callWindowPrefix:   { en: 'Lausanne', fr: 'Lausanne', pt: 'Lausanne' },
             callWindowSuffix:   { en: 'Mindelo', fr: 'Mindelo', pt: 'Mindelo' },
+
+            // ---- AI Insight ----
+            aiTitle:            { en: 'AI Daily Insight', fr: 'Insight IA du jour', pt: 'Insight diário com IA' },
+            aiSubtitle:         { en: 'Generate a short bridge insight from live context', fr: 'Générer un court insight à partir du contexte en direct', pt: 'Gerar um insight curto a partir do contexto em tempo real' },
+            aiGenerate:         { en: 'Generate insight', fr: "Générer l'insight", pt: 'Gerar insight' },
+            aiStatusNotConfigured: { en: 'AI backend not configured yet', fr: 'Backend IA non configuré', pt: 'Backend de IA ainda não configurado' },
+            aiStatusReady:      { en: 'Ready to generate', fr: 'Prêt à générer', pt: 'Pronto para gerar' },
+            aiStatusLoading:    { en: 'Generating insight...', fr: "Génération de l'insight...", pt: 'A gerar insight...' },
+            aiStatusError:      { en: 'Could not generate insight', fr: "Impossible de générer l'insight", pt: 'Não foi possível gerar o insight' },
+            aiOutputPlaceholder:{ en: 'When connected, this will summarize today in Mindelo and Lausanne.', fr: "Une fois connecté, ceci résumera la journée à Mindelo et Lausanne.", pt: 'Quando estiver ligado, isto vai resumir o dia em Mindelo e Lausanne.' },
 
             // ---- Weather ----
             weatherTitle:       { en: 'Weather Comparison', fr: 'Comparaison météo', pt: 'Comparação meteorológica' },
@@ -664,6 +680,7 @@
                 'subtitle', 'locationCv', 'locationCh',
                 'happeningLabelCv', 'happeningLabelCh',
                 'callTitle', 'callSubtitle', 'callHoursCvLabel', 'callHoursChLabel',
+                'aiTitle', 'aiSubtitle',
                 'weatherTitle', 'weatherSubtitle', 'weatherCvTitle', 'weatherChTitle',
                 'sunTitle', 'sunSubtitle', 'sunCvTitle', 'sunChTitle',
                 'calendarTitle', 'calendarSubtitle',
@@ -688,6 +705,7 @@
             document.getElementById('timeDiffSuffix').textContent = T.timeDiffSuffix[lang];
             document.getElementById('workHoursCv').textContent = T.callHoursCvValue[lang];
             document.getElementById('workHoursCh').textContent = T.callHoursChValue[lang];
+            updateAiStaticText();
 
             // Re-render dynamic sections
             updateClocks();
@@ -792,6 +810,77 @@
 
             statusEl.textContent = T.callStatusNone[currentLang];
             nextEl.textContent = T.callNoWindow[currentLang];
+        }
+
+        // ---- AI Insight ----
+        function updateAiStaticText() {
+            const btn = document.getElementById('aiGenerateBtn');
+            const status = document.getElementById('aiStatus');
+            const output = document.getElementById('aiOutput');
+            if (!btn || !status || !output) return;
+
+            btn.textContent = T.aiGenerate[currentLang];
+            if (!aiHasGenerated) {
+                output.textContent = T.aiOutputPlaceholder[currentLang];
+            }
+            status.textContent = AI_ENDPOINT ? T.aiStatusReady[currentLang] : T.aiStatusNotConfigured[currentLang];
+        }
+
+        function buildAiContextPayload() {
+            return {
+                lang: currentLang,
+                generatedAt: new Date().toISOString(),
+                cities: ['Mindelo', 'Lausanne'],
+                timeDifference: document.getElementById('timeDiff').textContent,
+                callStatus: document.getElementById('callStatus').textContent,
+                happeningMindelo: document.getElementById('happeningCv').textContent,
+                happeningLausanne: document.getElementById('happeningCh').textContent,
+                weatherMindelo: document.getElementById('weatherCvContent').innerText.trim(),
+                weatherLausanne: document.getElementById('weatherChContent').innerText.trim(),
+                dayLengthInfo: document.getElementById('sunDiff').textContent,
+            };
+        }
+
+        async function generateAiInsight() {
+            const btn = document.getElementById('aiGenerateBtn');
+            const status = document.getElementById('aiStatus');
+            const output = document.getElementById('aiOutput');
+            if (!btn || !status || !output) return;
+
+            if (!AI_ENDPOINT) {
+                status.textContent = T.aiStatusNotConfigured[currentLang];
+                return;
+            }
+
+            btn.disabled = true;
+            status.textContent = T.aiStatusLoading[currentLang];
+            try {
+                const res = await fetch(AI_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(buildAiContextPayload()),
+                });
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                if (!data || !data.insight) throw new Error('No insight in response');
+                aiHasGenerated = true;
+                output.textContent = data.insight;
+                status.textContent = T.aiStatusReady[currentLang];
+            } catch (err) {
+                status.textContent = T.aiStatusError[currentLang];
+                if (!aiHasGenerated) {
+                    output.textContent = T.aiOutputPlaceholder[currentLang];
+                }
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function initAiInsight() {
+            const btn = document.getElementById('aiGenerateBtn');
+            if (!btn) return;
+            btn.addEventListener('click', generateAiInsight);
+            updateAiStaticText();
         }
 
         // ---- What's Happening Now ----
@@ -1166,6 +1255,7 @@
         function init() {
             // Apply saved language
             setLanguage(currentLang);
+            initAiInsight();
 
             // Start clock interval
             setInterval(updateClocks, 1000);

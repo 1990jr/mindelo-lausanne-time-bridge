@@ -1,0 +1,6 @@
+name = "mindelo-lausanne-ai-bridge"
+main = "src/index.js"
+compatibility_date = "2026-02-09"
+
+[vars]
+ALLOWED_ORIGIN = "*"
