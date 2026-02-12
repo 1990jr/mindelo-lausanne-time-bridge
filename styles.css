@@ -476,7 +476,10 @@ body::after {
 }
 
 .ai-generate-btn {
+  appearance: none;
+  -webkit-appearance: none;
   border: none;
+  outline: none;
   cursor: pointer;
   border-radius: 999px;
   padding: 0.52rem 0.92rem;

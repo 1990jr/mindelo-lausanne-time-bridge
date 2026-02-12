@@ -13,9 +13,11 @@
         // ---- Configuration ----
         const MINDELO_TZ = 'Atlantic/Cape_Verde';  // UTC-1 year-round
         const LAUSANNE_TZ = 'Europe/Zurich';        // CET/CEST
+        const DEFAULT_AI_ENDPOINT = 'https://mindelo-lausanne-ai-bridge.mindelo-lausanne-ai.workers.dev/api/insight';
         const AI_ENDPOINT = (
             (window.TIME_BRIDGE_CONFIG && window.TIME_BRIDGE_CONFIG.aiEndpoint) ||
             localStorage.getItem('timeBridgeAiEndpoint') ||
+            DEFAULT_AI_ENDPOINT ||
             ''
         ).trim();
 
