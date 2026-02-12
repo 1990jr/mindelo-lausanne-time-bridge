@@ -1,4 +1,5 @@
 const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct';
+const PERIOD_KEYS = ['night', 'morning', 'midday', 'afternoon', 'evening'];
 
 export default {
   async fetch(request, env, ctx) {
@@ -41,11 +42,8 @@ async function handleInsight(request, env, url) {
   const cacheKeyUrl = `${url.origin}/cache/insight/${day}/${encodeURIComponent(lang)}`;
   const cacheKey = new Request(cacheKeyUrl, { method: 'GET' });
   const cache = caches.default;
-
   const cached = await cache.match(cacheKey);
-  if (cached) {
-    return withCors(cached, env);
-  }
+  if (cached) return withCors(cached, env);
 
   const prompt = buildPrompt(payload, lang);
 
@@ -53,20 +51,22 @@ async function handleInsight(request, env, url) {
   try {
     aiResult = await env.AI.run(DEFAULT_MODEL, {
       prompt,
-      max_tokens: 220,
-      temperature: 0.6,
+      max_tokens: 700,
+      temperature: 0.8,
     });
   } catch (err) {
     return json({ error: 'Workers AI request failed', details: String(err) }, 502, env);
   }
 
-  const insight = extractInsight(aiResult);
-  if (!insight) {
-    return json({ error: 'No insight text returned by Workers AI', details: aiResult }, 502, env);
+  const rawText = extractText(aiResult);
+  const parsed = extractStructuredPayload(rawText);
+  const content = normalizeDailyPayload(parsed);
+  if (!content) {
+    return json({ error: 'No valid structured daily payload returned by Workers AI' }, 502, env);
   }
 
   const response = new Response(JSON.stringify({
-    insight,
+    ...content,
     model: DEFAULT_MODEL,
     cached: false,
     day,
@@ -85,17 +85,41 @@ async function handleInsight(request, env, url) {
 
 function buildPrompt(payload, lang) {
   return [
-    'You are helping someone bridge life between Mindelo and Lausanne.',
+    'You create one daily "Mindelo <-> Lausanne" insight with playful facts.',
     `Output language: ${lang}.`,
-    'Write one concise daily insight in 2-4 sentences.',
-    'Use this context:',
+    'Return JSON only (no markdown, no extra text).',
+    'Schema:',
+    '{',
+    '  "insight": "2-4 short sentences, fun and fresh for today",',
+    '  "disclaimer": "AI-generated content may contain mistakes.",',
+    '  "facts": {',
+    '    "common": "one fun fact connecting both cities",',
+    '    "mindelo": "one fun fact about Mindelo",',
+    '    "lausanne": "one fun fact about Lausanne"',
+    '  },',
+    '  "themes": {',
+    '    "weekday": {',
+    '      "cv": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." },',
+    '      "ch": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." }',
+    '    },',
+    '    "weekend": {',
+    '      "cv": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." },',
+    '      "ch": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." }',
+    '    }',
+    '  }',
+    '}',
+    'Rules:',
+    '- Weekdays: avoid saying people are working during night/sleep hours.',
+    '- Weekends: do not mention work; Saturday morning can include groceries.',
+    '- Sundays: Mindelo can mention beach, Lausanne can mention mountains/ski seasonally.',
+    '- Keep each theme line concise (<= 95 chars) and realistic.',
+    '- Make content vary day to day.',
+    'Context:',
     JSON.stringify(payload, null, 2),
-    'Focus on practical and human meaning (timing, weather, lifestyle differences).',
-    'Do not use markdown. Do not mention being an AI.',
   ].join('\n');
 }
 
-function extractInsight(result) {
+function extractText(result) {
   if (!result) return '';
   if (typeof result === 'string') return result.trim();
   if (typeof result.response === 'string') return result.response.trim();
@@ -103,6 +127,78 @@ function extractInsight(result) {
     return result.result[0].text.trim();
   }
   return '';
+}
+
+function extractStructuredPayload(text) {
+  if (!text) return null;
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {}
+
+  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced && fenced[1]) {
+    try {
+      return JSON.parse(fenced[1].trim());
+    } catch {}
+  }
+
+  const start = trimmed.indexOf('{');
+  const end = trimmed.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    try {
+      return JSON.parse(trimmed.slice(start, end + 1));
+    } catch {}
+  }
+
+  return null;
+}
+
+function isNonEmptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function normalizeCityThemes(cityThemes) {
+  if (!cityThemes || typeof cityThemes !== 'object') return null;
+  const normalized = {};
+  for (const key of PERIOD_KEYS) {
+    if (!isNonEmptyString(cityThemes[key])) return null;
+    normalized[key] = cityThemes[key].trim();
+  }
+  return normalized;
+}
+
+function normalizeDayThemes(dayThemes) {
+  if (!dayThemes || typeof dayThemes !== 'object') return null;
+  const cv = normalizeCityThemes(dayThemes.cv);
+  const ch = normalizeCityThemes(dayThemes.ch);
+  if (!cv || !ch) return null;
+  return { cv, ch };
+}
+
+function normalizeDailyPayload(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  if (!isNonEmptyString(payload.insight)) return null;
+
+  const weekday = normalizeDayThemes(payload?.themes?.weekday);
+  const weekend = normalizeDayThemes(payload?.themes?.weekend);
+  if (!weekday || !weekend) return null;
+
+  return {
+    insight: payload.insight.trim(),
+    disclaimer: isNonEmptyString(payload.disclaimer)
+      ? payload.disclaimer.trim()
+      : 'AI-generated content may contain mistakes.',
+    facts: {
+      common: isNonEmptyString(payload?.facts?.common) ? payload.facts.common.trim() : '',
+      mindelo: isNonEmptyString(payload?.facts?.mindelo) ? payload.facts.mindelo.trim() : '',
+      lausanne: isNonEmptyString(payload?.facts?.lausanne) ? payload.facts.lausanne.trim() : '',
+    },
+    themes: {
+      weekday,
+      weekend,
+    },
+  };
 }
 
 function corsHeaders(env) {
