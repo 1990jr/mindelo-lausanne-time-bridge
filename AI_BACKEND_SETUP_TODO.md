@@ -1,15 +1,16 @@
-# AI Backend Setup TODO (Cloudflare Worker + Gemini)
+# AI Backend Setup TODO (Cloudflare Worker + Workers AI)
 
 ## 1. Accounts and access
 - [ ] Create or log in to a Cloudflare account.
 - [ ] Install Wrangler CLI: `npm i -g wrangler`.
 - [ ] Authenticate Wrangler: `wrangler login`.
-- [ ] Create or log in to Google AI Studio account.
+- [ ] Ensure Workers AI is enabled in your Cloudflare account.
 
-## 2. API keys and secrets
-- [ ] In Google AI Studio, create a Gemini API key.
-- [ ] In this repo, set Worker secret: `cd worker && wrangler secret put GEMINI_API_KEY`.
+## 2. Worker config
 - [ ] Decide your frontend origin (GitHub Pages URL) and set it in `worker/wrangler.toml` as `ALLOWED_ORIGIN`.
+- [ ] Confirm AI binding exists in `worker/wrangler.toml`:
+  `[ai]`
+  `binding = "AI"`
 
 ## 3. Deploy backend
 - [ ] Deploy Worker: `cd worker && wrangler deploy`.
@@ -20,7 +21,7 @@
 - [ ] Open browser console on your site and run:
   `localStorage.setItem('timeBridgeAiEndpoint', '<worker-url>/api/insight')`
 - [ ] Refresh the page.
-- [ ] Click "Generate insight" and verify response appears.
+- [ ] Verify the AI insight is generated automatically (no button) and appears in the AI card.
 
 ## 5. Production hardening (still free)
 - [ ] Replace wildcard CORS origin with your exact GitHub Pages domain.

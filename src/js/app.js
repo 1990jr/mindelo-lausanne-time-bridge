@@ -59,12 +59,12 @@
 
             // ---- AI Insight ----
             aiTitle:            { en: 'AI Daily Insight', fr: 'Insight IA du jour', pt: 'Insight diário com IA' },
-            aiSubtitle:         { en: 'Generate a short bridge insight from live context', fr: 'Générer un court insight à partir du contexte en direct', pt: 'Gerar um insight curto a partir do contexto em tempo real' },
-            aiGenerate:         { en: 'Generate insight', fr: "Générer l'insight", pt: 'Gerar insight' },
+            aiSubtitle:         { en: 'One insight is generated automatically each day', fr: 'Un insight est généré automatiquement chaque jour', pt: 'Um insight é gerado automaticamente todos os dias' },
             aiStatusNotConfigured: { en: 'AI backend not configured yet', fr: 'Backend IA non configuré', pt: 'Backend de IA ainda não configurado' },
-            aiStatusReady:      { en: 'Ready to generate', fr: 'Prêt à générer', pt: 'Pronto para gerar' },
+            aiStatusReady:      { en: 'Daily insight loaded', fr: 'Insight du jour chargé', pt: 'Insight diário carregado' },
             aiStatusLoading:    { en: 'Generating insight...', fr: "Génération de l'insight...", pt: 'A gerar insight...' },
             aiStatusError:      { en: 'Could not generate insight', fr: "Impossible de générer l'insight", pt: 'Não foi possível gerar o insight' },
+            aiStatusRetryLater: { en: 'AI temporarily unavailable, try again later', fr: 'IA temporairement indisponible, réessayez plus tard', pt: 'IA temporariamente indisponível, tente mais tarde' },
             aiOutputPlaceholder:{ en: 'When connected, this will summarize today in Mindelo and Lausanne.', fr: "Une fois connecté, ceci résumera la journée à Mindelo et Lausanne.", pt: 'Quando estiver ligado, isto vai resumir o dia em Mindelo e Lausanne.' },
 
             // ---- Weather ----
@@ -715,6 +715,7 @@
             renderCalendar();
             renderNeuroTip();
             refreshWeatherMeta();
+            fetchDailyAiInsight();
             // Re-fetch weather to re-render with correct language
             fetchWeather();
         }
@@ -816,16 +817,14 @@
 
         // ---- AI Insight ----
         function updateAiStaticText() {
-            const btn = document.getElementById('aiGenerateBtn');
             const status = document.getElementById('aiStatus');
             const output = document.getElementById('aiOutput');
-            if (!btn || !status || !output) return;
+            if (!status || !output) return;
 
-            btn.textContent = T.aiGenerate[currentLang];
             if (!aiHasGenerated) {
                 output.textContent = T.aiOutputPlaceholder[currentLang];
             }
-            status.textContent = AI_ENDPOINT ? T.aiStatusReady[currentLang] : T.aiStatusNotConfigured[currentLang];
+            status.textContent = AI_ENDPOINT ? T.aiStatusLoading[currentLang] : T.aiStatusNotConfigured[currentLang];
         }
 
         function buildAiContextPayload() {
@@ -843,18 +842,16 @@
             };
         }
 
-        async function generateAiInsight() {
-            const btn = document.getElementById('aiGenerateBtn');
+        async function fetchDailyAiInsight() {
             const status = document.getElementById('aiStatus');
             const output = document.getElementById('aiOutput');
-            if (!btn || !status || !output) return;
+            if (!status || !output) return;
 
             if (!AI_ENDPOINT) {
                 status.textContent = T.aiStatusNotConfigured[currentLang];
                 return;
             }
 
-            btn.disabled = true;
             status.textContent = T.aiStatusLoading[currentLang];
             try {
                 const res = await fetch(AI_ENDPOINT, {
@@ -869,20 +866,16 @@
                 output.textContent = data.insight;
                 status.textContent = T.aiStatusReady[currentLang];
             } catch (err) {
-                status.textContent = T.aiStatusError[currentLang];
+                status.textContent = T.aiStatusRetryLater[currentLang];
                 if (!aiHasGenerated) {
                     output.textContent = T.aiOutputPlaceholder[currentLang];
                 }
-            } finally {
-                btn.disabled = false;
             }
         }
 
         function initAiInsight() {
-            const btn = document.getElementById('aiGenerateBtn');
-            if (!btn) return;
-            btn.addEventListener('click', generateAiInsight);
             updateAiStaticText();
+            fetchDailyAiInsight();
         }
 
         // ---- What's Happening Now ----

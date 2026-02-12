@@ -4,3 +4,6 @@ compatibility_date = "2026-02-09"
 
 [vars]
 ALLOWED_ORIGIN = "https://1990jr.github.io"
+
+[ai]
+binding = "AI"
