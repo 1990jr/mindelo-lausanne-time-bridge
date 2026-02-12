@@ -13,6 +13,9 @@ Thumbs.db
 config.local.js
 .env
 .env.local
+worker/.dev.vars
+worker/node_modules/
 
 # Local planning notes (not published)
 TODO.local.md
+AGENTS.md
