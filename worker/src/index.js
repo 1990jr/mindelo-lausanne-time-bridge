@@ -39,7 +39,7 @@ async function handleInsight(request, env, url) {
 
   const lang = (payload.lang || 'en').toLowerCase();
   const day = new Date().toISOString().slice(0, 10);
-  const cacheKeyUrl = `${url.origin}/cache/insight/${day}/${encodeURIComponent(lang)}`;
+  const cacheKeyUrl = `${url.origin}/cache/v2/insight/${day}/${encodeURIComponent(lang)}`;
   const cacheKey = new Request(cacheKeyUrl, { method: 'GET' });
   const cache = caches.default;
   const cached = await cache.match(cacheKey);
