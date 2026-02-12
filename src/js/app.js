@@ -1,6 +1,8 @@
-    import { getTimezoneOffset, isSwissDST } from './core/time.js';
+    import { getTimezoneOffset, isSwissDST, getDayTypeInTZ, getHourInTZ } from './core/time.js';
     import { getOverlapWindows } from './core/call-windows.js';
-    import { pickHappeningScene } from './core/happening.js';
+    import { selectSceneByHour } from './core/happening.js';
+    import { normalizeAiDailyContent, buildAiHappeningOverrides } from './core/ai-daily.js';
+    import { shouldRecordMessage, createMessageLogEntry, appendMessageLog } from './core/message-log.js';
 
     // ===================================================================
     //  MINDELO-LAUSANNE TIME BRIDGE - Main Application Script
@@ -20,10 +22,17 @@
             DEFAULT_AI_ENDPOINT ||
             ''
         ).trim();
+        const AI_DAILY_CACHE_KEY = 'timeBridgeAiDailyContentV1';
+        const MESSAGE_LOG_KEY = 'timeBridgeMessageDisplayLogV1';
 
         // ---- i18n Translations ----
         let currentLang = localStorage.getItem('timeBridgeLang') || 'en';
         let aiHasGenerated = false;
+        let aiDailyContent = null;
+        let aiHappeningOverrides = null;
+        let aiDailyCache = loadAiDailyCache();
+        let messageLog = loadMessageLog();
+        let lastDisplayedByCity = { cv: null, ch: null };
 
         const LOCALES = { en: 'en-GB', fr: 'fr-FR', pt: 'pt-PT' };
 
@@ -66,6 +75,8 @@
             aiStatusError:      { en: 'Could not generate insight', fr: "Impossible de générer l'insight", pt: 'Não foi possível gerar o insight' },
             aiStatusRetryLater: { en: 'AI temporarily unavailable, try again later', fr: 'IA temporairement indisponible, réessayez plus tard', pt: 'IA temporariamente indisponível, tente mais tarde' },
             aiOutputPlaceholder:{ en: 'When connected, this will summarize today in Mindelo and Lausanne.', fr: "Une fois connecté, ceci résumera la journée à Mindelo et Lausanne.", pt: 'Quando estiver ligado, isto vai resumir o dia em Mindelo e Lausanne.' },
+            aiDisclaimerFallback:{ en: 'AI-generated content may contain mistakes.', fr: "Contenu généré par IA, pouvant contenir des erreurs.", pt: 'Conteúdo gerado por IA, pode conter erros.' },
+            aiLogDownload:      { en: 'Download message log', fr: 'Télécharger le journal des messages', pt: 'Baixar registo de mensagens' },
 
             // ---- Weather ----
             weatherTitle:       { en: 'Weather Comparison', fr: 'Comparaison météo', pt: 'Comparação meteorológica' },
@@ -708,6 +719,7 @@
             document.getElementById('workHoursCv').textContent = T.callHoursCvValue[lang];
             document.getElementById('workHoursCh').textContent = T.callHoursChValue[lang];
             updateAiStaticText();
+            updateAiLogButtonText();
 
             // Re-render dynamic sections
             updateClocks();
@@ -715,7 +727,7 @@
             renderCalendar();
             renderNeuroTip();
             refreshWeatherMeta();
-            fetchDailyAiInsight();
+            initAiInsight();
             // Re-fetch weather to re-render with correct language
             fetchWeather();
         }
@@ -816,6 +828,131 @@
         }
 
         // ---- AI Insight ----
+        function getTodayKey() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function getAiCacheEntryKey(day, lang) {
+            return `${day}:${lang}`;
+        }
+
+        function loadAiDailyCache() {
+            try {
+                const raw = localStorage.getItem(AI_DAILY_CACHE_KEY);
+                return raw ? JSON.parse(raw) : {};
+            } catch (err) {
+                return {};
+            }
+        }
+
+        function saveAiDailyCache() {
+            try {
+                localStorage.setItem(AI_DAILY_CACHE_KEY, JSON.stringify(aiDailyCache));
+            } catch (err) {
+                // Ignore storage errors. Network fetch remains source of truth.
+            }
+        }
+
+        function getCachedAiDailyContent(day, lang) {
+            const entry = aiDailyCache[getAiCacheEntryKey(day, lang)];
+            return entry && entry.content ? entry.content : null;
+        }
+
+        function setCachedAiDailyContent(day, lang, content) {
+            aiDailyCache[getAiCacheEntryKey(day, lang)] = {
+                savedAt: Date.now(),
+                content
+            };
+            saveAiDailyCache();
+        }
+
+        function loadMessageLog() {
+            try {
+                const raw = localStorage.getItem(MESSAGE_LOG_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (err) {
+                return [];
+            }
+        }
+
+        function saveMessageLog() {
+            try {
+                localStorage.setItem(MESSAGE_LOG_KEY, JSON.stringify(messageLog));
+            } catch (err) {
+                // Ignore storage failures.
+            }
+        }
+
+        function downloadMessageLog() {
+            const exportPayload = {
+                exportedAt: new Date().toISOString(),
+                entries: messageLog
+            };
+            const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `time-bridge-message-log-${getTodayKey()}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        function updateAiLogButtonText() {
+            const btn = document.getElementById('aiLogDownloadBtn');
+            if (!btn) return;
+            btn.textContent = T.aiLogDownload[currentLang];
+        }
+
+        function renderAiDisclaimer(text) {
+            const disclaimer = document.getElementById('aiDisclaimer');
+            if (!disclaimer) return;
+            disclaimer.textContent = text || T.aiDisclaimerFallback[currentLang];
+        }
+
+        function buildLegacyAiContent(payload) {
+            if (!payload || typeof payload.insight !== 'string' || !payload.insight.trim()) return null;
+            return {
+                insight: payload.insight.trim(),
+                disclaimer: T.aiDisclaimerFallback.en,
+                facts: { common: '', mindelo: '', lausanne: '' },
+                themes: null
+            };
+        }
+
+        function formatInsightText(content) {
+            const facts = [];
+            if (content?.facts?.common) facts.push(content.facts.common);
+            if (content?.facts?.mindelo) facts.push(content.facts.mindelo);
+            if (content?.facts?.lausanne) facts.push(content.facts.lausanne);
+            if (!facts.length) return content.insight;
+            return `${content.insight}\n\n• ${facts.join('\n• ')}`;
+        }
+
+        function applyAiDailyContent(content, options = {}) {
+            const { persist = false, day = getTodayKey(), lang = currentLang } = options;
+            const normalized = normalizeAiDailyContent(content);
+            const finalContent = normalized || buildLegacyAiContent(content);
+            if (!finalContent) return false;
+
+            aiDailyContent = finalContent;
+            aiHappeningOverrides = normalized && normalized.themes
+                ? buildAiHappeningOverrides(normalized.themes)
+                : null;
+            aiHasGenerated = true;
+
+            const output = document.getElementById('aiOutput');
+            const status = document.getElementById('aiStatus');
+            if (output) output.textContent = formatInsightText(finalContent);
+            if (status) status.textContent = T.aiStatusReady[currentLang];
+            renderAiDisclaimer(finalContent.disclaimer);
+            updateHappening(new Date());
+
+            if (persist) setCachedAiDailyContent(day, lang, finalContent);
+            return true;
+        }
+
         function updateAiStaticText() {
             const status = document.getElementById('aiStatus');
             const output = document.getElementById('aiOutput');
@@ -823,6 +960,7 @@
 
             if (!aiHasGenerated) {
                 output.textContent = T.aiOutputPlaceholder[currentLang];
+                renderAiDisclaimer(T.aiDisclaimerFallback[currentLang]);
             }
             status.textContent = AI_ENDPOINT ? T.aiStatusLoading[currentLang] : T.aiStatusNotConfigured[currentLang];
         }
@@ -844,8 +982,14 @@
 
         async function fetchDailyAiInsight() {
             const status = document.getElementById('aiStatus');
-            const output = document.getElementById('aiOutput');
-            if (!status || !output) return;
+            if (!status) return;
+            const day = getTodayKey();
+
+            const cached = getCachedAiDailyContent(day, currentLang);
+            if (cached) {
+                applyAiDailyContent(cached, { persist: false, day, lang: currentLang });
+                return;
+            }
 
             if (!AI_ENDPOINT) {
                 status.textContent = T.aiStatusNotConfigured[currentLang];
@@ -861,44 +1005,89 @@
                 });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                if (!data || !data.insight) throw new Error('No insight in response');
-                aiHasGenerated = true;
-                output.textContent = data.insight;
-                status.textContent = T.aiStatusReady[currentLang];
+                const didApply = applyAiDailyContent(data, { persist: true, day, lang: currentLang });
+                if (!didApply) throw new Error('No insight in response');
             } catch (err) {
                 status.textContent = T.aiStatusRetryLater[currentLang];
                 if (!aiHasGenerated) {
-                    output.textContent = T.aiOutputPlaceholder[currentLang];
+                    const output = document.getElementById('aiOutput');
+                    if (output) output.textContent = T.aiOutputPlaceholder[currentLang];
                 }
             }
         }
 
         function initAiInsight() {
+            const logBtn = document.getElementById('aiLogDownloadBtn');
+            if (logBtn && !logBtn.dataset.bound) {
+                logBtn.addEventListener('click', downloadMessageLog);
+                logBtn.dataset.bound = '1';
+            }
+            updateAiLogButtonText();
+
+            const day = getTodayKey();
+            const cached = getCachedAiDailyContent(day, currentLang);
+            aiHasGenerated = false;
+            aiDailyContent = null;
+            aiHappeningOverrides = null;
+            if (cached) {
+                applyAiDailyContent(cached, { persist: false, day, lang: currentLang });
+                return;
+            }
             updateAiStaticText();
             fetchDailyAiInsight();
         }
 
         // ---- What's Happening Now ----
+        function getHappeningSourceList(cityKey, dayType) {
+            const aiDayType = dayType === 'weekday' ? 'weekday' : 'weekend';
+            const aiList = aiHappeningOverrides?.[aiDayType]?.[cityKey];
+            if (Array.isArray(aiList) && aiList.length) {
+                return { list: aiList, source: 'ai' };
+            }
+
+            if (cityKey === 'cv') {
+                if (dayType === 'weekday') return { list: happeningCV[currentLang], source: 'static' };
+                return { list: happeningCVWeekend[dayType][currentLang], source: 'static' };
+            }
+
+            if (dayType === 'weekday') return { list: happeningCH[currentLang], source: 'static' };
+            return { list: happeningCHWeekend[dayType][currentLang], source: 'static' };
+        }
+
+        function recordMessageDisplay(cityKey, scene, dayType, source) {
+            if (!scene || !scene.text) return;
+            const lastEntry = lastDisplayedByCity[cityKey];
+            if (!shouldRecordMessage(lastEntry, scene.text)) return;
+
+            lastDisplayedByCity[cityKey] = { text: scene.text };
+            messageLog = appendMessageLog(messageLog, createMessageLogEntry({
+                city: cityKey,
+                dayType,
+                source,
+                text: scene.text,
+                isoNow: new Date().toISOString(),
+            }));
+            saveMessageLog();
+        }
+
         function updateHappening(now) {
-            const cvScene = pickHappeningScene({
-                date: now,
-                tz: MINDELO_TZ,
-                currentLang,
-                weekdayByLang: happeningCV,
-                weekendByDayByLang: happeningCVWeekend
-            });
-            const chScene = pickHappeningScene({
-                date: now,
-                tz: LAUSANNE_TZ,
-                currentLang,
-                weekdayByLang: happeningCH,
-                weekendByDayByLang: happeningCHWeekend
-            });
+            const cvDayType = getDayTypeInTZ(now, MINDELO_TZ);
+            const chDayType = getDayTypeInTZ(now, LAUSANNE_TZ);
+            const cvHour = getHourInTZ(now, MINDELO_TZ);
+            const chHour = getHourInTZ(now, LAUSANNE_TZ);
+            const cvSourceList = getHappeningSourceList('cv', cvDayType);
+            const chSourceList = getHappeningSourceList('ch', chDayType);
+
+            const cvScene = selectSceneByHour(cvSourceList.list, cvHour);
+            const chScene = selectSceneByHour(chSourceList.list, chHour);
 
             document.getElementById('happeningCvEmoji').textContent = cvScene.emoji;
             document.getElementById('happeningCv').textContent = cvScene.text;
             document.getElementById('happeningChEmoji').textContent = chScene.emoji;
             document.getElementById('happeningCh').textContent = chScene.text;
+
+            recordMessageDisplay('cv', cvScene, cvDayType, cvSourceList.source);
+            recordMessageDisplay('ch', chScene, chDayType, chSourceList.source);
         }
 
         // ---- Weather (Open-Meteo — free, no API key needed) ----
@@ -1250,7 +1439,6 @@
         function init() {
             // Apply saved language
             setLanguage(currentLang);
-            initAiInsight();
 
             // Start clock interval
             setInterval(updateClocks, 1000);
