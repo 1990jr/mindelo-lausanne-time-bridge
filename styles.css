@@ -14,10 +14,21 @@
 
   --ink-strong: #102536;
   --ink: #214058;
+  --ink-dark: #173852;
   --ink-soft: #5e7588;
+  --ink-muted: #648093;
+
+  --cv-water-dark: #0d4f81;
+  --cv-water-mid: #1f79af;
+  --cv-water-light: #74c2dd;
+  --cv-heading: #1874ad;
+  --ch-heading: #426f5b;
 
   --surface: #f7fafc;
   --surface-2: #eef3f7;
+  --surface-light: #f7fbff;
+  --sand-light: #f2c79e;
+  --text-on-dark: #e1edf5;
   --card: rgba(255, 255, 255, 0.78);
   --card-border: rgba(16, 37, 54, 0.12);
 
@@ -101,10 +112,10 @@ body::after {
   overflow: hidden;
   border-radius: var(--radius-lg);
   padding: 2.2rem 1.2rem 1.6rem;
-  color: #f7fbff;
+  color: var(--surface-light);
   text-align: center;
   background:
-    linear-gradient(140deg, #134a78 0%, #2c759f 35%, #9aa393 63%, #3f6b58 100%);
+    linear-gradient(140deg, #134a78 0%, #2c759f 35%, #9aa393 63%, var(--ch-mountain) 100%);
   box-shadow: var(--shadow-md);
 }
 
@@ -177,7 +188,7 @@ body::after {
 
 .lang-btn:hover,
 .lang-btn:focus-visible {
-  color: #ffffff;
+  color: #fff;
   background: rgba(255, 255, 255, 0.16);
 }
 
@@ -187,8 +198,8 @@ body::after {
 }
 
 .lang-btn.active {
-  color: #17354c;
-  background: #f3fbff;
+  color: var(--ink-dark);
+  background: var(--surface-light);
   box-shadow: 0 4px 10px rgba(9, 29, 43, 0.18);
 }
 
@@ -202,12 +213,12 @@ body::after {
   letter-spacing: 0.04em;
   font-weight: 700;
   background: rgba(20, 45, 64, 0.92);
-  color: #d9e8f2;
+  color: var(--text-on-dark);
   box-shadow: var(--shadow-sm);
 }
 
 .time-diff-banner span {
-  color: #f2c79e;
+  color: var(--sand-light);
 }
 
 /* ===== Shared section title ===== */
@@ -273,13 +284,13 @@ body::after {
 }
 
 .clock-cv {
-  color: #f7fbff;
+  color: var(--surface-light);
   background:
-    linear-gradient(170deg, #0d4f81 0%, #1f79af 48%, #74c2dd 100%);
+    linear-gradient(170deg, var(--cv-water-dark) 0%, var(--cv-water-mid) 48%, var(--cv-water-light) 100%);
 }
 
 .clock-ch {
-  color: #18354b;
+  color: var(--ink-dark);
   background:
     linear-gradient(170deg, #e9f2f8 0%, #cfe0eb 54%, #f3f8f4 100%);
 }
@@ -386,7 +397,7 @@ body::after {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #5e778c;
+  color: var(--ink-soft);
   font-weight: 800;
 }
 
@@ -401,7 +412,7 @@ body::after {
   font-size: 0.94rem;
   line-height: 1.5;
   font-weight: 600;
-  color: #18384f;
+  color: var(--ink-dark);
 }
 
 /* ===== Best time to call ===== */
@@ -419,13 +430,13 @@ body::after {
 .call-status {
   font-size: 1.03rem;
   font-weight: 800;
-  color: #173752;
+  color: var(--ink-dark);
 }
 
 .call-next {
   margin-top: 0.28rem;
   font-size: 0.9rem;
-  color: #5d7488;
+  color: var(--ink-muted);
   font-weight: 600;
 }
 
@@ -450,7 +461,7 @@ body::after {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.11em;
-  color: #61788c;
+  color: var(--ink-muted);
   font-weight: 800;
 }
 
@@ -458,7 +469,7 @@ body::after {
   margin-top: 0.28rem;
   font-size: 0.87rem;
   font-weight: 700;
-  color: #1f3e55;
+  color: var(--ink-dark);
   line-height: 1.45;
 }
 
@@ -483,14 +494,14 @@ body::after {
 
 .ai-status {
   font-size: 0.78rem;
-  color: #5f7688;
+  color: var(--ink-muted);
   font-weight: 700;
 }
 
 .ai-log-download-btn {
   border: 1px solid rgba(20, 58, 82, 0.24);
   background: rgba(255, 255, 255, 0.88);
-  color: #1b4763;
+  color: var(--ink-dark);
   font-size: 0.76rem;
   font-weight: 700;
   border-radius: 999px;
@@ -516,14 +527,14 @@ body::after {
   padding: 0.82rem 0.86rem;
   font-size: 0.91rem;
   line-height: 1.55;
-  color: #183a52;
+  color: var(--ink-dark);
   min-height: 72px;
 }
 
 .ai-disclaimer {
   margin-top: 0.5rem;
   font-size: 0.72rem;
-  color: #5f7688;
+  color: var(--ink-muted);
 }
 
 /* ===== Weather / Sun ===== */
@@ -552,10 +563,10 @@ body::after {
 }
 
 .weather-cv h3,
-.sun-cv h3 { color: #1874ad; }
+.sun-cv h3 { color: var(--cv-heading); }
 
 .weather-ch h3,
-.sun-ch h3 { color: #406c58; }
+.sun-ch h3 { color: var(--ch-heading); }
 
 .weather-icon {
   font-size: 2.65rem;
@@ -565,13 +576,13 @@ body::after {
 .weather-temp {
   font-size: 2rem;
   font-weight: 800;
-  color: #11324a;
+  color: var(--ink-strong);
 }
 
 .weather-desc {
   margin-top: 0.2rem;
   font-size: 0.82rem;
-  color: #648093;
+  color: var(--ink-muted);
   text-transform: capitalize;
   font-weight: 700;
 }
@@ -583,7 +594,7 @@ body::after {
   gap: 0.72rem;
   flex-wrap: wrap;
   font-size: 0.78rem;
-  color: #60798d;
+  color: var(--ink-muted);
   font-weight: 600;
 }
 
@@ -595,7 +606,7 @@ body::after {
 
 .weather-error {
   font-size: 0.84rem;
-  color: #6d8698;
+  color: var(--ink-muted);
   padding: 1rem 0.4rem;
   font-weight: 600;
 }
@@ -603,7 +614,7 @@ body::after {
 .weather-meta {
   margin-top: 0.76rem;
   font-size: 0.72rem;
-  color: #6a8295;
+  color: var(--ink-muted);
   font-weight: 700;
 }
 
@@ -624,14 +635,14 @@ body::after {
   font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #698196;
+  color: var(--ink-muted);
   font-weight: 800;
 }
 
 .sun-metric-value {
   margin-top: 0.2rem;
   font-size: 0.96rem;
-  color: #173852;
+  color: var(--ink-dark);
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -642,7 +653,7 @@ body::after {
   padding: 0.72rem 0.9rem;
   text-align: center;
   font-size: 0.88rem;
-  color: #456176;
+  color: var(--ink-muted);
   background: rgba(241, 247, 251, 0.86);
   border: 1px solid rgba(16, 37, 54, 0.08);
   font-weight: 700;
@@ -676,8 +687,8 @@ body::after {
   font-size: 1.03rem;
 }
 
-.calendar-cv .calendar-header h3 { color: #1a79b1; }
-.calendar-ch .calendar-header h3 { color: #426f5b; }
+.calendar-cv .calendar-header h3 { color: var(--cv-heading); }
+.calendar-ch .calendar-header h3 { color: var(--ch-heading); }
 
 .event-count {
   border-radius: 999px;
@@ -686,8 +697,8 @@ body::after {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #60798b;
-  background: #edf3f7;
+  color: var(--ink-muted);
+  background: var(--surface-2);
 }
 
 .calendar-next {
@@ -710,7 +721,7 @@ body::after {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   font-weight: 800;
-  color: #6a8397;
+  color: var(--ink-muted);
 }
 
 .calendar-next .event-date,
@@ -721,28 +732,28 @@ body::after {
   padding: 0.28rem 0.5rem;
   font-size: 0.66rem;
   background: rgba(255, 255, 255, 0.9);
-  color: #3f5f76;
+  color: var(--ink-muted);
   font-weight: 800;
 }
 
 .calendar-cv .calendar-next .event-date,
-.calendar-cv .event-date { border-left: 4px solid #1b8ecf; }
+.calendar-cv .event-date { border-left: 4px solid var(--cv-water); }
 
 .calendar-ch .calendar-next .event-date,
-.calendar-ch .event-date { border-left: 4px solid #4d7fa1; }
+.calendar-ch .event-date { border-left: 4px solid var(--ch-lake); }
 
 .calendar-next .event-name,
 .event-name {
   font-size: 0.86rem;
   font-weight: 800;
-  color: #183850;
+  color: var(--ink-dark);
 }
 
 .calendar-next .event-desc,
 .event-desc {
   margin-top: 0.08rem;
   font-size: 0.72rem;
-  color: #6b8397;
+  color: var(--ink-muted);
   line-height: 1.35;
 }
 
@@ -823,8 +834,8 @@ body::after {
   margin-bottom: 0.8rem;
 }
 
-.media-cv h3 { color: #1979b1; }
-.media-ch h3 { color: #426f5b; }
+.media-cv h3 { color: var(--cv-heading); }
+.media-ch h3 { color: var(--ch-heading); }
 
 .media-grid {
   display: grid;
@@ -841,7 +852,7 @@ body::after {
   background: rgba(241, 247, 252, 0.9);
   border: 1px solid rgba(16, 37, 54, 0.09);
   text-decoration: none;
-  color: #183950;
+  color: var(--ink-dark);
   transition: all 0.2s ease;
 }
 
@@ -881,7 +892,7 @@ body::after {
   font-size: 0.59rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #6f8698;
+  color: var(--ink-muted);
   font-weight: 700;
 }
 
@@ -890,8 +901,8 @@ body::after {
   margin-top: 1.2rem;
   padding: 1.8rem 1.2rem;
   text-align: center;
-  color: #ebf5fb;
-  background: linear-gradient(150deg, #183850 0%, #1d4f6d 42%, #2f6b74 100%);
+  color: var(--surface-light);
+  background: linear-gradient(150deg, var(--ink-dark) 0%, #1d4f6d 42%, #2f6b74 100%);
   position: relative;
   overflow: hidden;
 }
@@ -921,7 +932,7 @@ body::after {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.13em;
-  color: #f1d2b3;
+  color: var(--sand-light);
   font-weight: 800;
 }
 
@@ -937,7 +948,7 @@ body::after {
   font-size: 0.98rem;
   line-height: 1.68;
   font-weight: 500;
-  color: #e1edf5;
+  color: var(--text-on-dark);
 }
 
 .neuro-source {
@@ -952,7 +963,7 @@ body::after {
   margin-top: 1.1rem;
   padding: 1rem;
   text-align: center;
-  color: #5f778a;
+  color: var(--ink-muted);
   font-size: 0.78rem;
   font-weight: 700;
 }
