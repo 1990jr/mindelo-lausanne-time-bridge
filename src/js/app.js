@@ -39,6 +39,7 @@
         const T = {
             // ---- Header & structure ----
             subtitle:           { en: 'A bridge between two homes', fr: 'Un pont entre deux maisons', pt: 'Uma ponte entre duas casas' },
+            pageTitle:          { en: 'Mindelo ↔ Lausanne Time Bridge', fr: 'Pont horaire Mindelo ↔ Lausanne', pt: 'Ponte horária Mindelo ↔ Lausanne' },
             timeDiffPrefix:     { en: 'Lausanne is', fr: 'Lausanne a', pt: 'Lausanne está' },
             timeDiffSuffix:     { en: 'ahead of Mindelo', fr: "d'avance sur Mindelo", pt: 'à frente de Mindelo' },
             hour:               { en: 'hour', fr: 'heure', pt: 'hora' },
@@ -143,6 +144,7 @@
 
             // ---- Footer ----
             footerText:         { en: 'Connecting two homes across the Atlantic', fr: "Connecter deux foyers à travers l'Atlantique", pt: 'A ligar duas casas através do Atlântico' },
+            footerBrand:        { en: 'Mindelo ↔ Lausanne Time Bridge', fr: 'Pont horaire Mindelo ↔ Lausanne', pt: 'Ponte horária Mindelo ↔ Lausanne' },
 
             // ---- WMO Weather descriptions ----
             wmo0:  { en: 'Clear sky', fr: 'Ciel dégagé', pt: 'Céu limpo' },
@@ -698,7 +700,7 @@
                 'sunTitle', 'sunSubtitle', 'sunCvTitle', 'sunChTitle',
                 'calendarTitle', 'calendarSubtitle',
                 'mediaTitle', 'mediaSubtitle', 'mediaCvTitle', 'mediaChTitle',
-                'neuroTitle', 'footerText'
+                'neuroTitle', 'footerBrand', 'footerText'
             ];
             staticKeys.forEach(key => {
                 const el = document.getElementById(key);
@@ -718,6 +720,7 @@
             document.getElementById('timeDiffSuffix').textContent = T.timeDiffSuffix[lang];
             document.getElementById('workHoursCv').textContent = T.callHoursCvValue[lang];
             document.getElementById('workHoursCh').textContent = T.callHoursChValue[lang];
+            document.title = T.pageTitle[lang];
             updateAiStaticText();
             updateAiLogButtonText();
 
