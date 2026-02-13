@@ -920,7 +920,7 @@
             if (!payload || typeof payload.insight !== 'string' || !payload.insight.trim()) return null;
             return {
                 insight: payload.insight.trim(),
-                disclaimer: T.aiDisclaimerFallback.en,
+                disclaimer: T.aiDisclaimerFallback[currentLang],
                 facts: { common: '', mindelo: '', lausanne: '' },
                 themes: null
             };
