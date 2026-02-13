@@ -907,10 +907,10 @@
 
         function renderAiDisclaimer(text) {
             const subtitle = document.getElementById('aiSubtitle');
-            if (subtitle) subtitle.textContent = text || T.aiDisclaimerFallback[currentLang];
+            if (subtitle) subtitle.textContent = T.aiDisclaimerFallback[currentLang];
 
             const disclaimer = document.getElementById('aiDisclaimer');
-            if (disclaimer) disclaimer.textContent = text || T.aiDisclaimerFallback[currentLang];
+            if (disclaimer) disclaimer.textContent = T.aiDisclaimerFallback[currentLang];
         }
 
         function buildLegacyAiContent(payload) {
