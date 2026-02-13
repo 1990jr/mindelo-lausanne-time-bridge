@@ -989,19 +989,20 @@
             const status = document.getElementById('aiStatus');
             if (!status) return;
             const day = getTodayKey();
+            const fetchLang = currentLang;
 
-            const cached = getCachedAiDailyContent(day, currentLang);
+            const cached = getCachedAiDailyContent(day, fetchLang);
             if (cached) {
-                applyAiDailyContent(cached, { persist: false, day, lang: currentLang });
+                applyAiDailyContent(cached, { persist: false, day, lang: fetchLang });
                 return;
             }
 
             if (!AI_ENDPOINT) {
-                status.textContent = T.aiStatusNotConfigured[currentLang];
+                status.textContent = T.aiStatusNotConfigured[fetchLang];
                 return;
             }
 
-            status.textContent = T.aiStatusLoading[currentLang];
+            status.textContent = T.aiStatusLoading[fetchLang];
             try {
                 const aiController = new AbortController();
                 const aiTimeoutId = setTimeout(() => aiController.abort(), 15000);
@@ -1016,15 +1017,18 @@
                 } finally {
                     clearTimeout(aiTimeoutId);
                 }
+                if (fetchLang !== currentLang) return;
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                const didApply = applyAiDailyContent(data, { persist: true, day, lang: currentLang });
+                if (fetchLang !== currentLang) return;
+                const didApply = applyAiDailyContent(data, { persist: true, day, lang: fetchLang });
                 if (!didApply) throw new Error('No insight in response');
             } catch (err) {
-                status.textContent = T.aiStatusRetryLater[currentLang];
+                if (fetchLang !== currentLang) return;
+                status.textContent = T.aiStatusRetryLater[fetchLang];
                 if (!aiHasGenerated) {
                     const output = document.getElementById('aiOutput');
-                    if (output) output.textContent = T.aiOutputPlaceholder[currentLang];
+                    if (output) output.textContent = T.aiOutputPlaceholder[fetchLang];
                 }
             }
         }
