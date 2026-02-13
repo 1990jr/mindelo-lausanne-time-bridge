@@ -2,6 +2,11 @@ import { FACTS_BY_LANG, SUPPORTED_LANGS } from './facts.js';
 
 export const PERIOD_KEYS = ['night', 'morning', 'midday', 'afternoon', 'evening'];
 export const DEFAULT_DISCLAIMER = 'AI-generated content may contain mistakes.';
+const LANGUAGE_MARKERS = {
+  en: [' the ', ' and ', ' with ', ' in ', ' today ', ' both ', ' city '],
+  fr: [' le ', ' la ', ' les ', ' et ', ' dans ', ' aujourd', ' avec '],
+  pt: [' o ', ' a ', ' os ', ' as ', ' e ', ' em ', ' hoje ', ' com '],
+};
 
 function hashString(value) {
   let hash = 2166136261;
@@ -136,6 +141,38 @@ export function isGroundedInFacts(content, facts) {
   );
 }
 
+function countMarkerHits(text, markers) {
+  const lower = ` ${String(text || '').toLowerCase()} `;
+  return markers.reduce((acc, marker) => acc + (lower.includes(marker) ? 1 : 0), 0);
+}
+
+export function isExpectedLanguage(content, lang) {
+  if (!content || !content.insight) return false;
+  const safeLang = normalizeLang(lang);
+  const markers = LANGUAGE_MARKERS[safeLang];
+  if (!markers) return true;
+
+  const insightHits = countMarkerHits(content.insight, markers);
+  let themeHits = 0;
+  let themeChecks = 0;
+  for (const dayKey of ['weekday', 'weekend']) {
+    for (const cityKey of ['cv', 'ch']) {
+      for (const period of PERIOD_KEYS) {
+        const text = content?.themes?.[dayKey]?.[cityKey]?.[period];
+        if (typeof text === 'string' && text.trim()) {
+          themeChecks += 1;
+          if (countMarkerHits(text, markers) > 0) themeHits += 1;
+        }
+      }
+    }
+  }
+
+  if (safeLang === 'en') {
+    return insightHits >= 2 && themeHits >= Math.ceil(themeChecks * 0.4);
+  }
+  return insightHits >= 1 && themeHits >= Math.ceil(themeChecks * 0.3);
+}
+
 function buildSimpleThemes(lang) {
   const byLang = {
     en: {
@@ -263,6 +300,7 @@ export function buildReviewerPrompt(candidate, lang, facts, reviewerName) {
     '- facts.mindelo differs from provided mindelo_fact',
     '- facts.lausanne differs from provided lausanne_fact',
     '- city themes are nonsensical or contradict weekday/weekend behavior',
+    '- insight or themes are not written in the expected language',
     '- output is missing required fields',
     `common_fact: ${facts.common}`,
     `mindelo_fact: ${facts.mindelo}`,
@@ -287,4 +325,3 @@ export function buildRevisionPrompt(candidate, reviews, lang, facts) {
     JSON.stringify(reviews),
   ].join('\n');
 }
-
