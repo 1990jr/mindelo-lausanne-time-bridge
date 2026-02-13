@@ -1003,11 +1003,19 @@
 
             status.textContent = T.aiStatusLoading[currentLang];
             try {
-                const res = await fetch(AI_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(buildAiContextPayload()),
-                });
+                const aiController = new AbortController();
+                const aiTimeoutId = setTimeout(() => aiController.abort(), 15000);
+                let res;
+                try {
+                    res = await fetch(AI_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(buildAiContextPayload()),
+                        signal: aiController.signal,
+                    });
+                } finally {
+                    clearTimeout(aiTimeoutId);
+                }
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 const didApply = applyAiDailyContent(data, { persist: true, day, lang: currentLang });
@@ -1280,7 +1288,14 @@
                         `timezone=${encodeURIComponent(city.tz)}`
                     ].join('&');
                     const url = `https://api.open-meteo.com/v1/forecast?${params}`;
-                    const res = await fetch(url);
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 10000);
+                    let res;
+                    try {
+                        res = await fetch(url, { signal: controller.signal });
+                    } finally {
+                        clearTimeout(timeoutId);
+                    }
                     if (!res.ok) {
                         throw new Error('HTTP ' + res.status);
                     }
