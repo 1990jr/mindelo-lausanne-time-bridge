@@ -9,6 +9,7 @@ import {
   normalizeLang,
   normalizeReviewPayload,
   isGroundedInFacts,
+  isExpectedLanguage,
   pickDailyFacts,
 } from './insight-pipeline.js';
 
@@ -102,7 +103,7 @@ async function handleInsight(request, env, url, dailyLimit) {
     content = null;
   }
 
-  if (!content || !isGroundedInFacts(content, facts)) {
+  if (!content || !isGroundedInFacts(content, facts) || !isExpectedLanguage(content, lang)) {
     content = buildSafeFallbackPayload(lang, facts);
     mode = 'fallback-grounded';
   }
@@ -154,7 +155,7 @@ async function runConsensusPipeline(runAi, payload, lang, facts) {
     reviewCandidate(runAi, draft, lang, facts, 'A'),
     reviewCandidate(runAi, draft, lang, facts, 'B'),
   ]);
-  if (allApproved(firstReviews) && isGroundedInFacts(draft, facts)) {
+  if (allApproved(firstReviews) && isGroundedInFacts(draft, facts) && isExpectedLanguage(draft, lang)) {
     return { content: draft, mode: 'consensus-initial' };
   }
 
@@ -168,7 +169,7 @@ async function runConsensusPipeline(runAi, payload, lang, facts) {
     reviewCandidate(runAi, revised, lang, facts, 'A2'),
     reviewCandidate(runAi, revised, lang, facts, 'B2'),
   ]);
-  if (allApproved(secondReviews) && isGroundedInFacts(revised, facts)) {
+  if (allApproved(secondReviews) && isGroundedInFacts(revised, facts) && isExpectedLanguage(revised, lang)) {
     return { content: revised, mode: 'consensus-revised' };
   }
 

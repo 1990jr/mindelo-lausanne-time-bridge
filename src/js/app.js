@@ -68,7 +68,7 @@
 
             // ---- AI Insight ----
             aiTitle:            { en: 'AI Daily Insight', fr: 'Insight IA du jour', pt: 'Insight diário com IA' },
-            aiSubtitle:         { en: 'One insight is generated automatically each day', fr: 'Un insight est généré automatiquement chaque jour', pt: 'Um insight é gerado automaticamente todos os dias' },
+            aiSubtitle:         { en: 'AI-generated content may contain mistakes.', fr: "Contenu généré par IA, pouvant contenir des erreurs.", pt: 'Conteúdo gerado por IA, pode conter erros.' },
             aiStatusNotConfigured: { en: 'AI backend not configured yet', fr: 'Backend IA non configuré', pt: 'Backend de IA ainda não configurado' },
             aiStatusReady:      { en: 'Daily insight loaded', fr: 'Insight du jour chargé', pt: 'Insight diário carregado' },
             aiStatusLoading:    { en: 'Generating insight...', fr: "Génération de l'insight...", pt: 'A gerar insight...' },
@@ -906,9 +906,11 @@
         }
 
         function renderAiDisclaimer(text) {
+            const subtitle = document.getElementById('aiSubtitle');
+            if (subtitle) subtitle.textContent = text || T.aiDisclaimerFallback[currentLang];
+
             const disclaimer = document.getElementById('aiDisclaimer');
-            if (!disclaimer) return;
-            disclaimer.textContent = text || T.aiDisclaimerFallback[currentLang];
+            if (disclaimer) disclaimer.textContent = text || T.aiDisclaimerFallback[currentLang];
         }
 
         function buildLegacyAiContent(payload) {

@@ -5,6 +5,7 @@ import {
   normalizeDailyPayload,
   normalizeReviewPayload,
   isGroundedInFacts,
+  isExpectedLanguage,
   buildSafeFallbackPayload,
   extractStructuredPayload,
 } from '../../worker/src/insight-pipeline.js';
@@ -63,3 +64,9 @@ test('extractStructuredPayload parses fenced JSON', () => {
   assert.equal(parsed.approved, true);
 });
 
+test('isExpectedLanguage rejects mismatched language content', () => {
+  const ptFacts = pickDailyFacts('2026-02-13', 'pt');
+  const ptContent = buildSafeFallbackPayload('pt', ptFacts);
+  assert.equal(isExpectedLanguage(ptContent, 'pt'), true);
+  assert.equal(isExpectedLanguage(ptContent, 'en'), false);
+});
