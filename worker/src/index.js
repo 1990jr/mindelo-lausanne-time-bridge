@@ -1,5 +1,21 @@
+import {
+  buildGeneratorPrompt,
+  buildReviewerPrompt,
+  buildRevisionPrompt,
+  buildSafeFallbackPayload,
+  extractText,
+  extractStructuredPayload,
+  normalizeDailyPayload,
+  normalizeLang,
+  normalizeReviewPayload,
+  isGroundedInFacts,
+  pickDailyFacts,
+} from './insight-pipeline.js';
+
 const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct';
-const PERIOD_KEYS = ['night', 'morning', 'midday', 'afternoon', 'evening'];
+const DEFAULT_DAILY_AI_CALL_LIMIT = 10;
+const CACHE_VERSION = 'v4';
+const BUDGET_VERSION = 'v1';
 
 export default {
   async fetch(request, env, ctx) {
@@ -9,23 +25,30 @@ export default {
 
 async function handleRequest(request, env) {
   const url = new URL(request.url);
+  const dailyLimit = getDailyLimit(env);
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders(env) });
   }
 
   if (url.pathname === '/health') {
-    return json({ ok: true, service: 'mindelo-ai-bridge', provider: 'cloudflare-workers-ai' }, 200, env);
+    return json({
+      ok: true,
+      service: 'mindelo-ai-bridge',
+      provider: 'cloudflare-workers-ai',
+      mode: 'triple-consensus',
+      dailyAiCallLimit: dailyLimit,
+    }, 200, env);
   }
 
   if (url.pathname === '/api/insight' && request.method === 'POST') {
-    return handleInsight(request, env, url);
+    return handleInsight(request, env, url, dailyLimit);
   }
 
   return json({ error: 'Not found' }, 404, env);
 }
 
-async function handleInsight(request, env, url) {
+async function handleInsight(request, env, url, dailyLimit) {
   if (!env.AI || typeof env.AI.run !== 'function') {
     return json({ error: 'Missing Workers AI binding. Configure [ai] binding = "AI" in wrangler.toml' }, 500, env);
   }
@@ -37,39 +60,61 @@ async function handleInsight(request, env, url) {
     return json({ error: 'Invalid JSON payload' }, 400, env);
   }
 
-  const lang = (payload.lang || 'en').toLowerCase();
+  const lang = normalizeLang((payload.lang || 'en').toLowerCase());
   const day = new Date().toISOString().slice(0, 10);
-  const cacheKeyUrl = `${url.origin}/cache/v2/insight/${day}/${encodeURIComponent(lang)}`;
-  const cacheKey = new Request(cacheKeyUrl, { method: 'GET' });
   const cache = caches.default;
+  const cacheKey = new Request(`${url.origin}/cache/${CACHE_VERSION}/insight/${day}/${encodeURIComponent(lang)}`);
   const cached = await cache.match(cacheKey);
   if (cached) return withCors(cached, env);
 
-  const prompt = buildPrompt(payload, lang);
+  const budget = await readDailyBudget(cache, url.origin, day);
+  if (budget.used >= dailyLimit) {
+    const fallbackFacts = pickDailyFacts(day, lang);
+    const fallback = buildSafeFallbackPayload(lang, fallbackFacts);
+    return json({
+      ...fallback,
+      model: DEFAULT_MODEL,
+      cached: false,
+      day,
+      mode: 'fallback-daily-limit-reached',
+      aiCallsUsedToday: budget.used,
+    }, 200, env);
+  }
 
-  let aiResult;
+  const facts = pickDailyFacts(day, lang);
+  const runAi = makeAiRunner({
+    env,
+    cache,
+    origin: url.origin,
+    day,
+    hardLimit: dailyLimit,
+    model: DEFAULT_MODEL,
+  });
+
+  let content = null;
+  let mode = 'fallback';
+  let callResult;
   try {
-    aiResult = await env.AI.run(DEFAULT_MODEL, {
-      prompt,
-      max_tokens: 700,
-      temperature: 0.8,
-    });
+    callResult = await runConsensusPipeline(runAi, payload, lang, facts);
+    content = callResult.content;
+    mode = callResult.mode;
   } catch (err) {
-    return json({ error: 'Workers AI request failed', details: String(err) }, 502, env);
+    content = null;
   }
 
-  const rawText = extractText(aiResult);
-  const parsed = extractStructuredPayload(rawText);
-  const content = normalizeDailyPayload(parsed);
-  if (!content) {
-    return json({ error: 'No valid structured daily payload returned by Workers AI' }, 502, env);
+  if (!content || !isGroundedInFacts(content, facts)) {
+    content = buildSafeFallbackPayload(lang, facts);
+    mode = 'fallback-grounded';
   }
 
+  const currentBudget = await readDailyBudget(cache, url.origin, day);
   const response = new Response(JSON.stringify({
     ...content,
     model: DEFAULT_MODEL,
     cached: false,
     day,
+    mode,
+    aiCallsUsedToday: currentBudget.used,
   }), {
     status: 200,
     headers: {
@@ -83,122 +128,115 @@ async function handleInsight(request, env, url) {
   return response;
 }
 
-function buildPrompt(payload, lang) {
-  return [
-    'You create one daily "Mindelo <-> Lausanne" insight with playful facts.',
-    `Output language: ${lang}.`,
-    'Return JSON only (no markdown, no extra text).',
-    'Schema:',
-    '{',
-    '  "insight": "2-4 short sentences, fun and fresh for today",',
-    '  "disclaimer": "AI-generated content may contain mistakes.",',
-    '  "facts": {',
-    '    "common": "one fun fact connecting both cities",',
-    '    "mindelo": "one fun fact about Mindelo",',
-    '    "lausanne": "one fun fact about Lausanne"',
-    '  },',
-    '  "themes": {',
-    '    "weekday": {',
-    '      "cv": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." },',
-    '      "ch": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." }',
-    '    },',
-    '    "weekend": {',
-    '      "cv": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." },',
-    '      "ch": { "night": "...", "morning": "...", "midday": "...", "afternoon": "...", "evening": "..." }',
-    '    }',
-    '  }',
-    '}',
-    'Rules:',
-    '- Weekdays: avoid saying people are working during night/sleep hours.',
-    '- Weekends: do not mention work; Saturday morning can include groceries.',
-    '- Sundays: Mindelo can mention beach, Lausanne can mention mountains/ski seasonally.',
-    '- Keep each theme line concise (<= 95 chars) and realistic.',
-    '- Make content vary day to day.',
-    'Context:',
-    JSON.stringify(payload, null, 2),
-  ].join('\n');
-}
-
-function extractText(result) {
-  if (!result) return '';
-  if (typeof result === 'string') return result.trim();
-  if (typeof result.response === 'string') return result.response.trim();
-  if (Array.isArray(result.result) && result.result[0] && typeof result.result[0].text === 'string') {
-    return result.result[0].text.trim();
-  }
-  return '';
-}
-
-function extractStructuredPayload(text) {
-  if (!text) return null;
-  const trimmed = text.trim();
-  try {
-    return JSON.parse(trimmed);
-  } catch {}
-
-  const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  if (fenced && fenced[1]) {
-    try {
-      return JSON.parse(fenced[1].trim());
-    } catch {}
-  }
-
-  const start = trimmed.indexOf('{');
-  const end = trimmed.lastIndexOf('}');
-  if (start !== -1 && end !== -1 && end > start) {
-    try {
-      return JSON.parse(trimmed.slice(start, end + 1));
-    } catch {}
-  }
-
-  return null;
-}
-
-function isNonEmptyString(value) {
-  return typeof value === 'string' && value.trim().length > 0;
-}
-
-function normalizeCityThemes(cityThemes) {
-  if (!cityThemes || typeof cityThemes !== 'object') return null;
-  const normalized = {};
-  for (const key of PERIOD_KEYS) {
-    if (!isNonEmptyString(cityThemes[key])) return null;
-    normalized[key] = cityThemes[key].trim();
-  }
-  return normalized;
-}
-
-function normalizeDayThemes(dayThemes) {
-  if (!dayThemes || typeof dayThemes !== 'object') return null;
-  const cv = normalizeCityThemes(dayThemes.cv);
-  const ch = normalizeCityThemes(dayThemes.ch);
-  if (!cv || !ch) return null;
-  return { cv, ch };
-}
-
-function normalizeDailyPayload(payload) {
-  if (!payload || typeof payload !== 'object') return null;
-  if (!isNonEmptyString(payload.insight)) return null;
-
-  const weekday = normalizeDayThemes(payload?.themes?.weekday);
-  const weekend = normalizeDayThemes(payload?.themes?.weekend);
-  if (!weekday || !weekend) return null;
-
-  return {
-    insight: payload.insight.trim(),
-    disclaimer: isNonEmptyString(payload.disclaimer)
-      ? payload.disclaimer.trim()
-      : 'AI-generated content may contain mistakes.',
-    facts: {
-      common: isNonEmptyString(payload?.facts?.common) ? payload.facts.common.trim() : '',
-      mindelo: isNonEmptyString(payload?.facts?.mindelo) ? payload.facts.mindelo.trim() : '',
-      lausanne: isNonEmptyString(payload?.facts?.lausanne) ? payload.facts.lausanne.trim() : '',
-    },
-    themes: {
-      weekday,
-      weekend,
-    },
+function makeAiRunner({ env, cache, origin, day, hardLimit, model }) {
+  return async function run(prompt) {
+    const canRun = await consumeBudget(cache, origin, day, hardLimit);
+    if (!canRun.ok) {
+      throw new Error('Daily AI call limit reached');
+    }
+    const raw = await env.AI.run(model, {
+      prompt,
+      max_tokens: 900,
+      temperature: 0.6,
+    });
+    return raw;
   };
+}
+
+async function runConsensusPipeline(runAi, payload, lang, facts) {
+  const generatorPrompt = buildGeneratorPrompt(payload, lang, facts);
+  const draft = await generateCandidate(runAi, generatorPrompt);
+  if (!draft) {
+    return { content: null, mode: 'fallback-invalid-generator' };
+  }
+
+  const firstReviews = await Promise.all([
+    reviewCandidate(runAi, draft, lang, facts, 'A'),
+    reviewCandidate(runAi, draft, lang, facts, 'B'),
+  ]);
+  if (allApproved(firstReviews) && isGroundedInFacts(draft, facts)) {
+    return { content: draft, mode: 'consensus-initial' };
+  }
+
+  const revisionPrompt = buildRevisionPrompt(draft, firstReviews, lang, facts);
+  const revised = await generateCandidate(runAi, revisionPrompt);
+  if (!revised) {
+    return { content: null, mode: 'fallback-invalid-revision' };
+  }
+
+  const secondReviews = await Promise.all([
+    reviewCandidate(runAi, revised, lang, facts, 'A2'),
+    reviewCandidate(runAi, revised, lang, facts, 'B2'),
+  ]);
+  if (allApproved(secondReviews) && isGroundedInFacts(revised, facts)) {
+    return { content: revised, mode: 'consensus-revised' };
+  }
+
+  return { content: null, mode: 'fallback-review-rejected' };
+}
+
+async function generateCandidate(runAi, prompt) {
+  const text = extractText(await runAi(prompt));
+  const parsed = extractStructuredPayload(text);
+  return normalizeDailyPayload(parsed);
+}
+
+async function reviewCandidate(runAi, candidate, lang, facts, reviewerName) {
+  const prompt = buildReviewerPrompt(candidate, lang, facts, reviewerName);
+  const text = extractText(await runAi(prompt));
+  const parsed = extractStructuredPayload(text);
+  return normalizeReviewPayload(parsed) || { approved: false, issues: ['invalid reviewer output'], reason: 'invalid reviewer output' };
+}
+
+function allApproved(reviews) {
+  return reviews.every((review) => review && review.approved === true);
+}
+
+function getDailyLimit(env) {
+  const raw = Number.parseInt(String(env.DAILY_AI_CALL_LIMIT || DEFAULT_DAILY_AI_CALL_LIMIT), 10);
+  if (!Number.isFinite(raw) || raw <= 0) return DEFAULT_DAILY_AI_CALL_LIMIT;
+  return raw;
+}
+
+function budgetKey(origin, day) {
+  return new Request(`${origin}/cache/${BUDGET_VERSION}/daily-ai-budget/${day}`);
+}
+
+function budgetTtlSeconds() {
+  return 48 * 60 * 60;
+}
+
+async function readDailyBudget(cache, origin, day) {
+  const key = budgetKey(origin, day);
+  const cached = await cache.match(key);
+  if (!cached) return { used: 0 };
+
+  try {
+    const data = await cached.json();
+    return { used: Number.isFinite(data.used) ? data.used : 0 };
+  } catch {
+    return { used: 0 };
+  }
+}
+
+async function consumeBudget(cache, origin, day, hardLimit) {
+  const key = budgetKey(origin, day);
+  const current = await readDailyBudget(cache, origin, day);
+  if (current.used >= hardLimit) {
+    return { ok: false, used: current.used };
+  }
+  const nextUsed = current.used + 1;
+  const response = new Response(JSON.stringify({
+    used: nextUsed,
+    updatedAt: new Date().toISOString(),
+  }), {
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': `public, max-age=${budgetTtlSeconds()}`,
+    },
+  });
+  await cache.put(key, response);
+  return { ok: true, used: nextUsed };
 }
 
 function corsHeaders(env) {
