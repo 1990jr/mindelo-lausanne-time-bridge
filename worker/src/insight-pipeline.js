@@ -289,39 +289,7 @@ export function buildGeneratorPrompt(payload, lang, facts) {
   ].join('\n');
 }
 
-export function buildReviewerPrompt(candidate, lang, facts, reviewerName) {
-  return [
-    `You are reviewer ${reviewerName} for fact-check and realism.`,
-    `Language: ${normalizeLang(lang)}.`,
-    'Return JSON only:',
-    '{ "approved": true|false, "issues": ["..."], "reason": "..." }',
-    'Reject if ANY of these are true:',
-    '- facts.common differs from provided common_fact',
-    '- facts.mindelo differs from provided mindelo_fact',
-    '- facts.lausanne differs from provided lausanne_fact',
-    '- city themes are nonsensical or contradict weekday/weekend behavior',
-    '- insight or themes are not written in the expected language',
-    '- output is missing required fields',
-    `common_fact: ${facts.common}`,
-    `mindelo_fact: ${facts.mindelo}`,
-    `lausanne_fact: ${facts.lausanne}`,
-    'Candidate JSON:',
-    JSON.stringify(candidate),
-  ].join('\n');
-}
-
-export function buildRevisionPrompt(candidate, reviews, lang, facts) {
-  return [
-    'Revise this candidate JSON based on reviewer feedback.',
-    `Output language: ${normalizeLang(lang)}.`,
-    'Return strict JSON only with the same schema.',
-    'Keep facts exactly equal to provided fact strings.',
-    `common_fact: ${facts.common}`,
-    `mindelo_fact: ${facts.mindelo}`,
-    `lausanne_fact: ${facts.lausanne}`,
-    'Candidate:',
-    JSON.stringify(candidate),
-    'Reviews:',
-    JSON.stringify(reviews),
-  ].join('\n');
-}
+// buildReviewerPrompt and buildRevisionPrompt were removed — the consensus
+// pipeline was replaced by a single-call generation flow to reduce AI budget
+// usage by 60-80%.  The server-side validators (isGroundedInFacts,
+// isExpectedLanguage, normalizeDailyPayload) provide sufficient quality gates.

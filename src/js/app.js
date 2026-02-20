@@ -15,6 +15,9 @@
         // ---- Configuration ----
         const MINDELO_TZ = 'Atlantic/Cape_Verde';  // UTC-1 year-round
         const LAUSANNE_TZ = 'Europe/Zurich';        // CET/CEST
+        // Default Cloudflare Worker endpoint for AI insights.  When unreachable
+        // (e.g. local dev or worker not deployed), the app silently falls back to
+        // the static placeholder text — no error is shown to the user.
         const DEFAULT_AI_ENDPOINT = 'https://mindelo-lausanne-ai-bridge.mindelo-lausanne-ai.workers.dev/api/insight';
         const AI_ENDPOINT = (
             (window.TIME_BRIDGE_CONFIG && window.TIME_BRIDGE_CONFIG.aiEndpoint) ||
@@ -28,6 +31,7 @@
         // ---- i18n Translations ----
         let currentLang = localStorage.getItem('timeBridgeLang') || 'en';
         let aiHasGenerated = false;
+        let aiFetchInProgress = false;
         let aiDailyContent = null;
         let aiHappeningOverrides = null;
         let aiDailyCache = loadAiDailyCache();
@@ -415,7 +419,13 @@
                     { start: 22, end: 24, emoji: '🌙', text: 'Lausanne acalma no fim da noite de sábado' }
                 ]
             },
-            sun: {
+            // Sunday CH scenes are season-aware — use getSeasonalCHSunday() instead
+            sun: null
+        };
+
+        // Season-aware Sunday scenes for Lausanne (Dec-Mar: skiing, Jun-Sep: lake/summer, Apr-May & Oct-Nov: hiking)
+        const happeningCHSundayBySeason = {
+            winter: {
                 en: [
                     { start: 0, end: 5, emoji: '🌙', text: 'Sunday night in Lausanne is calm before mountain plans' },
                     { start: 5, end: 7, emoji: '🏔️', text: 'Sunday sunrise over Lausanne — alpine day ahead' },
@@ -461,8 +471,113 @@
                     { start: 21, end: 22, emoji: '📚', text: 'Preparação da semana em Lausanne' },
                     { start: 22, end: 24, emoji: '🌙', text: 'Final tranquilo da noite de domingo em Lausanne' }
                 ]
+            },
+            summer: {
+                en: [
+                    { start: 0, end: 5, emoji: '🌙', text: 'Sunday night in Lausanne is calm before a lake day' },
+                    { start: 5, end: 7, emoji: '🌅', text: 'Sunday sunrise over Lake Geneva — summer day ahead' },
+                    { start: 7, end: 9, emoji: '🥐', text: 'Relaxed Sunday breakfast in Lausanne before heading to the lake' },
+                    { start: 9, end: 11, emoji: '🏊', text: 'Sunday morning swim at Bellerive or Vidy beach' },
+                    { start: 11, end: 12, emoji: '🌞', text: 'Sun and lake breeze across Lausanne' },
+                    { start: 12, end: 13, emoji: '🍉', text: 'Sunday lunch by the lake — relaxed and sunny' },
+                    { start: 13, end: 15, emoji: '⛵', text: 'Afternoon sailing or paddleboarding on Lake Geneva' },
+                    { start: 15, end: 16, emoji: '🍦', text: 'Ice cream break by the Ouchy waterfront' },
+                    { start: 16, end: 18, emoji: '🚶', text: 'Late Sunday stroll through Lausanne vineyards' },
+                    { start: 18, end: 19, emoji: '🌇', text: 'Golden hour over Lake Geneva on a summer Sunday' },
+                    { start: 19, end: 21, emoji: '🍽️', text: 'Quiet Sunday dinner in Lausanne' },
+                    { start: 21, end: 22, emoji: '📚', text: 'Preparing for the week in Lausanne' },
+                    { start: 22, end: 24, emoji: '🌙', text: 'Sunday night wind-down in Lausanne' }
+                ],
+                fr: [
+                    { start: 0, end: 5, emoji: '🌙', text: 'La nuit de dimanche à Lausanne est calme avant la journée lac' },
+                    { start: 5, end: 7, emoji: '🌅', text: 'Lever du soleil du dimanche sur le lac Léman — journée d\'été en vue' },
+                    { start: 7, end: 9, emoji: '🥐', text: 'Petit-déjeuner du dimanche avant d\'aller au lac' },
+                    { start: 9, end: 11, emoji: '🏊', text: 'Baignade du dimanche matin à Bellerive ou Vidy' },
+                    { start: 11, end: 12, emoji: '🌞', text: 'Soleil et brise lacustre sur Lausanne' },
+                    { start: 12, end: 13, emoji: '🍉', text: 'Déjeuner du dimanche au bord du lac — détendu et ensoleillé' },
+                    { start: 13, end: 15, emoji: '⛵', text: 'Voile ou paddle l\'après-midi sur le lac Léman' },
+                    { start: 15, end: 16, emoji: '🍦', text: 'Pause glace sur le quai d\'Ouchy' },
+                    { start: 16, end: 18, emoji: '🚶', text: 'Balade dominicale dans les vignobles de Lausanne' },
+                    { start: 18, end: 19, emoji: '🌇', text: 'Heure dorée sur le lac Léman un dimanche d\'été' },
+                    { start: 19, end: 21, emoji: '🍽️', text: 'Dîner calme du dimanche à Lausanne' },
+                    { start: 21, end: 22, emoji: '📚', text: 'Préparation de la semaine à Lausanne' },
+                    { start: 22, end: 24, emoji: '🌙', text: 'Fin de dimanche soir tranquille à Lausanne' }
+                ],
+                pt: [
+                    { start: 0, end: 5, emoji: '🌙', text: 'A noite de domingo em Lausanne é calma antes do dia de lago' },
+                    { start: 5, end: 7, emoji: '🌅', text: 'Nascer do sol de domingo sobre o Lago Léman — dia de verão pela frente' },
+                    { start: 7, end: 9, emoji: '🥐', text: 'Pequeno-almoço de domingo antes de ir ao lago' },
+                    { start: 9, end: 11, emoji: '🏊', text: 'Banho de domingo de manhã em Bellerive ou Vidy' },
+                    { start: 11, end: 12, emoji: '🌞', text: 'Sol e brisa lacustre sobre Lausanne' },
+                    { start: 12, end: 13, emoji: '🍉', text: 'Almoço de domingo junto ao lago — relaxado e com sol' },
+                    { start: 13, end: 15, emoji: '⛵', text: 'Tarde de vela ou paddle no Lago Léman' },
+                    { start: 15, end: 16, emoji: '🍦', text: 'Pausa para gelado no cais de Ouchy' },
+                    { start: 16, end: 18, emoji: '🚶', text: 'Passeio dominical pelas vinhas de Lausanne' },
+                    { start: 18, end: 19, emoji: '🌇', text: 'Hora dourada sobre o Lago Léman num domingo de verão' },
+                    { start: 19, end: 21, emoji: '🍽️', text: 'Jantar calmo de domingo em Lausanne' },
+                    { start: 21, end: 22, emoji: '📚', text: 'Preparação da semana em Lausanne' },
+                    { start: 22, end: 24, emoji: '🌙', text: 'Final tranquilo da noite de domingo em Lausanne' }
+                ]
+            },
+            shoulder: {
+                en: [
+                    { start: 0, end: 5, emoji: '🌙', text: 'Sunday night in Lausanne is calm before a hiking day' },
+                    { start: 5, end: 7, emoji: '🏔️', text: 'Sunday sunrise over Lausanne — nature day ahead' },
+                    { start: 7, end: 9, emoji: '🥐', text: 'Sunday breakfast in Lausanne before heading to the trails' },
+                    { start: 9, end: 11, emoji: '🥾', text: 'Sunday hiking departure from Lausanne into the hills' },
+                    { start: 11, end: 12, emoji: '🍂', text: 'On the trails above Lausanne — fresh autumn air' },
+                    { start: 12, end: 13, emoji: '🍲', text: 'Sunday lunch at a mountain refuge after a morning hike' },
+                    { start: 13, end: 15, emoji: '🥾', text: 'Afternoon walk through Lavaux vineyards' },
+                    { start: 15, end: 16, emoji: '☕', text: 'Coffee break with a view of the Alps' },
+                    { start: 16, end: 18, emoji: '🚞', text: 'Returning to Lausanne from a day in nature' },
+                    { start: 18, end: 19, emoji: '🏠', text: 'Back home in Lausanne after Sunday hiking' },
+                    { start: 19, end: 21, emoji: '🍽️', text: 'Quiet Sunday dinner in Lausanne' },
+                    { start: 21, end: 22, emoji: '📚', text: 'Preparing for the week in Lausanne' },
+                    { start: 22, end: 24, emoji: '🌙', text: 'Sunday night wind-down in Lausanne' }
+                ],
+                fr: [
+                    { start: 0, end: 5, emoji: '🌙', text: 'La nuit de dimanche à Lausanne est calme avant la randonnée' },
+                    { start: 5, end: 7, emoji: '🏔️', text: 'Lever du soleil du dimanche sur Lausanne — journée nature en vue' },
+                    { start: 7, end: 9, emoji: '🥐', text: 'Petit-déjeuner du dimanche avant de partir en randonnée' },
+                    { start: 9, end: 11, emoji: '🥾', text: 'Départ de randonnée du dimanche depuis Lausanne' },
+                    { start: 11, end: 12, emoji: '🍂', text: 'Sur les sentiers au-dessus de Lausanne — air frais d\'automne' },
+                    { start: 12, end: 13, emoji: '🍲', text: 'Déjeuner dominical dans un refuge après la rando du matin' },
+                    { start: 13, end: 15, emoji: '🥾', text: 'Balade l\'après-midi dans les vignobles de Lavaux' },
+                    { start: 15, end: 16, emoji: '☕', text: 'Pause café avec vue sur les Alpes' },
+                    { start: 16, end: 18, emoji: '🚞', text: 'Retour à Lausanne après une journée en pleine nature' },
+                    { start: 18, end: 19, emoji: '🏠', text: 'De retour à la maison à Lausanne après la randonnée' },
+                    { start: 19, end: 21, emoji: '🍽️', text: 'Dîner calme du dimanche à Lausanne' },
+                    { start: 21, end: 22, emoji: '📚', text: 'Préparation de la semaine à Lausanne' },
+                    { start: 22, end: 24, emoji: '🌙', text: 'Fin de dimanche soir tranquille à Lausanne' }
+                ],
+                pt: [
+                    { start: 0, end: 5, emoji: '🌙', text: 'A noite de domingo em Lausanne é calma antes da caminhada' },
+                    { start: 5, end: 7, emoji: '🏔️', text: 'Nascer do sol de domingo em Lausanne — dia de natureza pela frente' },
+                    { start: 7, end: 9, emoji: '🥐', text: 'Pequeno-almoço de domingo antes de seguir para os trilhos' },
+                    { start: 9, end: 11, emoji: '🥾', text: 'Partida de domingo de Lausanne para as montanhas' },
+                    { start: 11, end: 12, emoji: '🍂', text: 'Nos trilhos acima de Lausanne — ar fresco de outono' },
+                    { start: 12, end: 13, emoji: '🍲', text: 'Almoço de domingo num refúgio após a caminhada da manhã' },
+                    { start: 13, end: 15, emoji: '🥾', text: 'Passeio de tarde pelas vinhas de Lavaux' },
+                    { start: 15, end: 16, emoji: '☕', text: 'Pausa para café com vista para os Alpes' },
+                    { start: 16, end: 18, emoji: '🚞', text: 'Regresso a Lausanne depois de um dia na natureza' },
+                    { start: 18, end: 19, emoji: '🏠', text: 'De volta a casa em Lausanne após a caminhada de domingo' },
+                    { start: 19, end: 21, emoji: '🍽️', text: 'Jantar calmo de domingo em Lausanne' },
+                    { start: 21, end: 22, emoji: '📚', text: 'Preparação da semana em Lausanne' },
+                    { start: 22, end: 24, emoji: '🌙', text: 'Final tranquilo da noite de domingo em Lausanne' }
+                ]
             }
         };
+
+        function getSwissSeason() {
+            const month = new Date().getMonth(); // 0-indexed
+            if (month >= 5 && month <= 8) return 'summer';    // Jun-Sep
+            if (month >= 11 || month <= 2) return 'winter';   // Dec-Mar
+            return 'shoulder';                                  // Apr-May, Oct-Nov
+        }
+
+        function getSeasonalCHSunday() {
+            return happeningCHSundayBySeason[getSwissSeason()];
+        }
 
         // ---- Neuroscience Tips per language ----
         const neuroTips = {
@@ -839,10 +954,30 @@
             return `${day}:${lang}`;
         }
 
+        function pruneAiDailyCache(cache) {
+            const maxAgeMs = 3 * 24 * 60 * 60 * 1000;
+            const now = Date.now();
+            let changed = false;
+            for (const key of Object.keys(cache)) {
+                const entry = cache[key];
+                if (!entry || !entry.savedAt || now - entry.savedAt > maxAgeMs) {
+                    delete cache[key];
+                    changed = true;
+                }
+            }
+            if (changed) {
+                try {
+                    localStorage.setItem(AI_DAILY_CACHE_KEY, JSON.stringify(cache));
+                } catch (err) { /* ignore */ }
+            }
+            return cache;
+        }
+
         function loadAiDailyCache() {
             try {
                 const raw = localStorage.getItem(AI_DAILY_CACHE_KEY);
-                return raw ? JSON.parse(raw) : {};
+                const cache = raw ? JSON.parse(raw) : {};
+                return pruneAiDailyCache(cache);
             } catch (err) {
                 return {};
             }
@@ -908,12 +1043,9 @@
             btn.textContent = T.aiLogDownload[currentLang];
         }
 
-        function renderAiDisclaimer(text) {
+        function renderAiDisclaimer() {
             const subtitle = document.getElementById('aiSubtitle');
             if (subtitle) subtitle.textContent = T.aiDisclaimerFallback[currentLang];
-
-            const disclaimer = document.getElementById('aiDisclaimer');
-            if (disclaimer) disclaimer.textContent = T.aiDisclaimerFallback[currentLang];
         }
 
         function buildLegacyAiContent(payload) {
@@ -951,7 +1083,7 @@
             const status = document.getElementById('aiStatus');
             if (output) output.textContent = formatInsightText(finalContent);
             if (status) status.textContent = T.aiStatusReady[currentLang];
-            renderAiDisclaimer(finalContent.disclaimer);
+            renderAiDisclaimer();
             updateHappening(new Date());
 
             if (persist) setCachedAiDailyContent(day, lang, finalContent);
@@ -965,9 +1097,16 @@
 
             if (!aiHasGenerated) {
                 output.textContent = T.aiOutputPlaceholder[currentLang];
-                renderAiDisclaimer(T.aiDisclaimerFallback[currentLang]);
+                renderAiDisclaimer();
             }
             status.textContent = AI_ENDPOINT ? T.aiStatusLoading[currentLang] : T.aiStatusNotConfigured[currentLang];
+        }
+
+        function safeTextContent(id) {
+            const el = document.getElementById(id);
+            const text = el ? (el.innerText || el.textContent || '').trim() : '';
+            if (/loading|chargement|carregar/i.test(text)) return '';
+            return text;
         }
 
         function buildAiContextPayload() {
@@ -979,15 +1118,16 @@
                 callStatus: document.getElementById('callStatus').textContent,
                 happeningMindelo: document.getElementById('happeningCv').textContent,
                 happeningLausanne: document.getElementById('happeningCh').textContent,
-                weatherMindelo: document.getElementById('weatherCvContent').innerText.trim(),
-                weatherLausanne: document.getElementById('weatherChContent').innerText.trim(),
-                dayLengthInfo: document.getElementById('sunDiff').textContent,
+                weatherMindelo: safeTextContent('weatherCvContent'),
+                weatherLausanne: safeTextContent('weatherChContent'),
+                dayLengthInfo: safeTextContent('sunDiff'),
             };
         }
 
         async function fetchDailyAiInsight() {
             const status = document.getElementById('aiStatus');
             if (!status) return;
+            if (aiFetchInProgress) return;
             const day = getTodayKey();
 
             const cached = getCachedAiDailyContent(day, currentLang);
@@ -1002,6 +1142,7 @@
             }
 
             status.textContent = T.aiStatusLoading[currentLang];
+            aiFetchInProgress = true;
             try {
                 const res = await fetch(AI_ENDPOINT, {
                     method: 'POST',
@@ -1018,6 +1159,8 @@
                     const output = document.getElementById('aiOutput');
                     if (output) output.textContent = T.aiOutputPlaceholder[currentLang];
                 }
+            } finally {
+                aiFetchInProgress = false;
             }
         }
 
@@ -1056,6 +1199,7 @@
             }
 
             if (dayType === 'weekday') return { list: happeningCH[currentLang], source: 'static' };
+            if (dayType === 'sun') return { list: getSeasonalCHSunday()[currentLang], source: 'static' };
             return { list: happeningCHWeekend[dayType][currentLang], source: 'static' };
         }
 
@@ -1270,7 +1414,7 @@
                 }
             }
 
-            for (const city of cities) {
+            async function fetchCityWeather(city) {
                 try {
                     const params = [
                         `latitude=${city.lat}`,
@@ -1306,6 +1450,8 @@
                     }
                 }
             }
+
+            await Promise.allSettled(cities.map(city => fetchCityWeather(city)));
             saveWeatherCache();
             renderSunDiff(daylightByCity.cv, daylightByCity.ch);
             refreshWeatherMeta();
@@ -1441,9 +1587,14 @@
         }
 
         // ---- Initialize ----
-        function init() {
-            // Apply saved language
+        async function init() {
+            // Apply saved language (renders all UI including weather + AI)
             setLanguage(currentLang);
+
+            // Ensure weather is fetched before the AI insight request so
+            // buildAiContextPayload doesn't send stale "Loading…" text.
+            await fetchWeather();
+            initAiInsight();
 
             // Start clock interval
             setInterval(updateClocks, 1000);

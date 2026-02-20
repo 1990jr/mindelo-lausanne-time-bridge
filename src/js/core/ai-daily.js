@@ -1,3 +1,8 @@
+// NOTE: normalizeAiDailyContent mirrors normalizeDailyPayload in
+// worker/src/insight-pipeline.js.  Both run in different environments
+// (browser vs Cloudflare Workers) and don't share modules, so the
+// duplication is intentional.  Keep them in sync when changing the schema.
+
 const PERIOD_ORDER = ['night', 'morning', 'midday', 'afternoon', 'evening'];
 
 const TIME_BLOCKS = [

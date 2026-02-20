@@ -6,7 +6,7 @@ A single-page web app that bridges two homes — Mindelo (Cabo Verde) and Lausan
 
 - **Dual Clocks** — Live time in Mindelo (CVT, UTC-1) and Lausanne (CET/CEST) with smooth second-by-second updates
 - **"What's Happening Now"** — Contextual messages about daily life in each city based on the current local time
-- **Weather Comparison** — Side-by-side live weather via OpenWeatherMap API
+- **Weather Comparison** — Side-by-side live weather via Open-Meteo API (free, no key needed)
 - **Cultural Calendar** — Upcoming holidays and events for Cabo Verde and Switzerland
 - **Daily Brain Insight** — Rotating neuroscience tips about circadian rhythms, jet lag, time perception, and more
 - **Mobile Responsive** — Works on phone and desktop
@@ -48,7 +48,7 @@ Your site will be live at: `https://YOUR_USERNAME.github.io/mindelo-lausanne-tim
 mindelo-lausanne-time-bridge/
 ├── index.html    # The entire app (HTML + CSS + JS in one file)
 ├── README.md     # This file
-└── claude.md     # Project context for Claude Code
+└── CLAUDE.md     # Project context for Claude Code
 ```
 
 ## License

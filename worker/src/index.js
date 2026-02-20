@@ -1,20 +1,17 @@
 import {
   buildGeneratorPrompt,
-  buildReviewerPrompt,
-  buildRevisionPrompt,
   buildSafeFallbackPayload,
   extractText,
   extractStructuredPayload,
   normalizeDailyPayload,
   normalizeLang,
-  normalizeReviewPayload,
   isGroundedInFacts,
   isExpectedLanguage,
   pickDailyFacts,
 } from './insight-pipeline.js';
 
 const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct';
-const DEFAULT_DAILY_AI_CALL_LIMIT = 10;
+const DEFAULT_DAILY_AI_CALL_LIMIT = 5;
 const CACHE_VERSION = 'v4';
 const BUDGET_VERSION = 'v1';
 
@@ -37,7 +34,7 @@ async function handleRequest(request, env) {
       ok: true,
       service: 'mindelo-ai-bridge',
       provider: 'cloudflare-workers-ai',
-      mode: 'triple-consensus',
+      mode: 'single-call',
       dailyAiCallLimit: dailyLimit,
     }, 200, env);
   }
@@ -94,11 +91,12 @@ async function handleInsight(request, env, url, dailyLimit) {
 
   let content = null;
   let mode = 'fallback';
-  let callResult;
   try {
-    callResult = await runConsensusPipeline(runAi, payload, lang, facts);
-    content = callResult.content;
-    mode = callResult.mode;
+    const prompt = buildGeneratorPrompt(payload, lang, facts);
+    const text = extractText(await runAi(prompt));
+    const parsed = extractStructuredPayload(text);
+    content = normalizeDailyPayload(parsed);
+    mode = content ? 'single-call' : 'fallback-invalid-generator';
   } catch (err) {
     content = null;
   }
@@ -144,55 +142,6 @@ function makeAiRunner({ env, cache, origin, day, hardLimit, model }) {
   };
 }
 
-async function runConsensusPipeline(runAi, payload, lang, facts) {
-  const generatorPrompt = buildGeneratorPrompt(payload, lang, facts);
-  const draft = await generateCandidate(runAi, generatorPrompt);
-  if (!draft) {
-    return { content: null, mode: 'fallback-invalid-generator' };
-  }
-
-  const firstReviews = await Promise.all([
-    reviewCandidate(runAi, draft, lang, facts, 'A'),
-    reviewCandidate(runAi, draft, lang, facts, 'B'),
-  ]);
-  if (allApproved(firstReviews) && isGroundedInFacts(draft, facts) && isExpectedLanguage(draft, lang)) {
-    return { content: draft, mode: 'consensus-initial' };
-  }
-
-  const revisionPrompt = buildRevisionPrompt(draft, firstReviews, lang, facts);
-  const revised = await generateCandidate(runAi, revisionPrompt);
-  if (!revised) {
-    return { content: null, mode: 'fallback-invalid-revision' };
-  }
-
-  const secondReviews = await Promise.all([
-    reviewCandidate(runAi, revised, lang, facts, 'A2'),
-    reviewCandidate(runAi, revised, lang, facts, 'B2'),
-  ]);
-  if (allApproved(secondReviews) && isGroundedInFacts(revised, facts) && isExpectedLanguage(revised, lang)) {
-    return { content: revised, mode: 'consensus-revised' };
-  }
-
-  return { content: null, mode: 'fallback-review-rejected' };
-}
-
-async function generateCandidate(runAi, prompt) {
-  const text = extractText(await runAi(prompt));
-  const parsed = extractStructuredPayload(text);
-  return normalizeDailyPayload(parsed);
-}
-
-async function reviewCandidate(runAi, candidate, lang, facts, reviewerName) {
-  const prompt = buildReviewerPrompt(candidate, lang, facts, reviewerName);
-  const text = extractText(await runAi(prompt));
-  const parsed = extractStructuredPayload(text);
-  return normalizeReviewPayload(parsed) || { approved: false, issues: ['invalid reviewer output'], reason: 'invalid reviewer output' };
-}
-
-function allApproved(reviews) {
-  return reviews.every((review) => review && review.approved === true);
-}
-
 function getDailyLimit(env) {
   const raw = Number.parseInt(String(env.DAILY_AI_CALL_LIMIT || DEFAULT_DAILY_AI_CALL_LIMIT), 10);
   if (!Number.isFinite(raw) || raw <= 0) return DEFAULT_DAILY_AI_CALL_LIMIT;
@@ -220,6 +169,12 @@ async function readDailyBudget(cache, origin, day) {
   }
 }
 
+// NOTE: The Cache API read-then-write in consumeBudget is not atomic, so
+// concurrent requests could read the same budget value before either writes.
+// In practice the window is small — the response-level cache (cacheKey) ensures
+// at most 3 concurrent first-requests (one per language: en/fr/pt) on a cache
+// miss.  After the first success for a given day+lang, the cached response is
+// returned immediately with no AI call.
 async function consumeBudget(cache, origin, day, hardLimit) {
   const key = budgetKey(origin, day);
   const current = await readDailyBudget(cache, origin, day);

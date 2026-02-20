@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {
   pickDailyFacts,
   normalizeDailyPayload,
-  normalizeReviewPayload,
   isGroundedInFacts,
   isExpectedLanguage,
   buildSafeFallbackPayload,
@@ -34,13 +33,6 @@ test('normalizeDailyPayload validates expected schema', () => {
   };
   assert.ok(normalizeDailyPayload(payload));
   assert.equal(normalizeDailyPayload({ insight: 'x' }), null);
-});
-
-test('normalizeReviewPayload validates reviewer response', () => {
-  const review = normalizeReviewPayload({ approved: false, issues: ['bad fact'], reason: 'mismatch' });
-  assert.equal(review.approved, false);
-  assert.equal(review.issues.length, 1);
-  assert.equal(normalizeReviewPayload({ approved: 'no' }), null);
 });
 
 test('isGroundedInFacts checks exact fact agreement', () => {
