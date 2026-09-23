@@ -102,6 +102,7 @@ async function handleInsight(request, env, url, dailyLimit) {
     content = normalizeDailyPayload(parsed);
     mode = content ? 'single-call' : 'fallback-invalid-generator';
   } catch (err) {
+    console.error('[insight] generation failed:', err?.message || err);
     content = null;
   }
 
@@ -168,7 +169,8 @@ async function readDailyBudget(cache, origin, day) {
   try {
     const data = await cached.json();
     return { used: Number.isFinite(data.used) ? data.used : 0 };
-  } catch {
+  } catch (err) {
+    console.error('[budget] failed to parse cached budget:', err?.message || err);
     return { used: 0 };
   }
 }
@@ -201,7 +203,7 @@ async function consumeBudget(cache, origin, day, hardLimit) {
 
 function corsHeaders(env) {
   return {
-    'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
+    'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || 'https://1990jr.github.io',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };

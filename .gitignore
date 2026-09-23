@@ -19,3 +19,5 @@ worker/node_modules/
 # Local planning notes (not published)
 TODO.local.md
 AGENTS.md
+CLAUDE.md
+claude.md

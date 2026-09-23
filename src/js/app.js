@@ -996,7 +996,7 @@
             if (!payload || typeof payload.insight !== 'string' || !payload.insight.trim()) return null;
             return {
                 insight: payload.insight.trim(),
-                disclaimer: T.aiDisclaimerFallback.en,
+                disclaimer: T.aiDisclaimerFallback[currentLang],
                 facts: { common: '', mindelo: '', lausanne: '' }
             };
         }
@@ -1049,14 +1049,14 @@
             const day = getTodayKey();
             const requestLang = currentLang;
 
-            const cached = getCachedAiDailyContent(day, currentLang);
+            const cached = getCachedAiDailyContent(day, requestLang);
             if (cached) {
-                applyAiDailyContent(cached, { persist: false, day, lang: currentLang });
+                applyAiDailyContent(cached, { persist: false, day, lang: requestLang });
                 return;
             }
 
             if (!AI_ENDPOINT) {
-                status.textContent = T.aiStatusNotConfigured[currentLang];
+                status.textContent = T.aiStatusNotConfigured[requestLang];
                 return;
             }
 
@@ -1079,7 +1079,7 @@
                 status.textContent = T.aiStatusRetryLater[currentLang];
                 if (!aiHasGenerated) {
                     const output = document.getElementById('aiOutput');
-                    if (output) output.textContent = T.aiOutputPlaceholder[currentLang];
+                    if (output) output.textContent = T.aiOutputPlaceholder[requestLang];
                 }
             } finally {
                 aiFetchInProgress = false;
