@@ -75,3 +75,19 @@ test('extractText reads every Workers AI response shape', () => {
   assert.equal(extractStructuredPayload(extractText({ response: { insight: 'Pick a song.' } })).insight, 'Pick a song.');
   assert.equal(extractText({ usage: {} }), '');
 });
+
+test('isExpectedLanguage accepts short playful questions in each language', () => {
+  const en = { insight: 'If you could send one song across the ocean, which would it be?' };
+  const fr = { insight: 'Si vous pouviez envoyer une chanson, laquelle choisiriez-vous pour votre appel ?' };
+  const pt = { insight: 'Se pudessem enviar uma música para a outra pessoa, qual seria? Cada um escolhe a sua.' };
+  assert.equal(isExpectedLanguage(en, 'en'), true);
+  assert.equal(isExpectedLanguage(fr, 'fr'), true);
+  assert.equal(isExpectedLanguage(pt, 'pt'), true);
+  assert.equal(isExpectedLanguage(en, 'pt'), false);
+  assert.equal(isExpectedLanguage(pt, 'fr'), false);
+});
+
+test('extractStructuredPayload recovers an insight with a raw line break', () => {
+  const parsed = extractStructuredPayload('{ "insight": "Line one.\nLine two." }');
+  assert.equal(parsed.insight, 'Line one. Line two.');
+});

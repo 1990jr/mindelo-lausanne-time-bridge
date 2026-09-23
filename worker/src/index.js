@@ -13,7 +13,7 @@ import {
 // AI_MODEL var when this one is retired: https://developers.cloudflare.com/workers-ai/models/
 const DEFAULT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const DEFAULT_DAILY_AI_CALL_LIMIT = 5;
-const CACHE_VERSION = 'v8';
+const CACHE_VERSION = 'v9';
 const BUDGET_VERSION = 'v1';
 
 export default {

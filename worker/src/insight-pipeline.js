@@ -7,10 +7,15 @@ const LANGUAGE_NAMES = {
   fr: 'French',
   pt: 'European Portuguese (pt-PT, as written in Cabo Verde), not Brazilian Portuguese',
 };
+// Common words, none shared between the lists (so no " a ", " as ", " do ",
+// " que ", " de " or " ou ").
 const LANGUAGE_MARKERS = {
-  en: [' the ', ' and ', ' with ', ' in ', ' today ', ' both ', ' city '],
-  fr: [' le ', ' la ', ' les ', ' et ', ' dans ', ' aujourd', ' avec '],
-  pt: [' o ', ' a ', ' os ', ' as ', ' e ', ' em ', ' hoje ', ' com '],
+  en: [' the ', ' and ', ' with ', ' in ', ' today ', ' both ', ' city ', ' you ', ' your ', ' of ', ' to ',
+    ' is ', ' what ', ' would ', ' which ', ' from ', ' for ', ' if ', ' one ', ' who ', ' how '],
+  fr: [' le ', ' la ', ' les ', ' et ', ' dans ', ' aujourd', ' avec ', ' vous ', ' votre ', ' du ', ' des ',
+    ' un ', ' une ', ' est ', ' qui ', ' pour ', ' quel ', ' quelle ', ' si ', ' chacun ', ' chez '],
+  pt: [' o ', ' os ', ' e ', ' em ', ' hoje ', ' com ', ' da ', ' dos ', ' das ', ' um ', ' uma ', ' para ',
+    ' qual ', ' é ', ' não ', ' vocês ', ' cada ', ' sua ', ' seu ', ' mais ', ' pessoa '],
 };
 
 function hashString(value) {
@@ -81,6 +86,14 @@ export function extractStructuredPayload(text) {
     } catch {}
   }
 
+  // Last resort for near-JSON, such as a raw line break inside the string.
+  const loose = trimmed.match(/"insight"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if (loose) {
+    try {
+      return { insight: JSON.parse(`"${loose[1].replace(/[\u0000-\u001f]+/g, ' ')}"`) };
+    } catch {}
+  }
+
   return null;
 }
 
@@ -120,7 +133,7 @@ export function normalizeReviewPayload(payload) {
 }
 
 function countMarkerHits(text, markers) {
-  const lower = ` ${String(text || '').toLowerCase()} `;
+  const lower = ` ${String(text || '').toLowerCase().replace(/[^\p{L}\p{N}’']+/gu, ' ')} `;
   return markers.reduce((acc, marker) => acc + (lower.includes(marker) ? 1 : 0), 0);
 }
 
@@ -134,7 +147,7 @@ export function isExpectedLanguage(content, lang) {
   const hits = Object.fromEntries(Object.entries(LANGUAGE_MARKERS)
     .map(([key, markers]) => [key, countMarkerHits(content.insight, markers)]));
   const expected = hits[safeLang];
-  return expected >= (safeLang === 'en' ? 2 : 1) &&
+  return expected >= 2 &&
     Object.entries(hits).every(([key, count]) => key === safeLang || count < expected);
 }
 
