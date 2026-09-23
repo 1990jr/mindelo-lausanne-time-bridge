@@ -1,14 +1,16 @@
 # Mindelo ↔ Lausanne Time Bridge 🌉
 
-A single-page web app that bridges two homes — Mindelo (Cabo Verde) and Lausanne (Switzerland) — with live clocks, weather, cultural calendars, and daily neuroscience insights.
+A single-page web app that bridges two homes — Mindelo (Cabo Verde) and Lausanne (Switzerland) — with live clocks, weather, cultural calendars, conversation challenges, and daily neuroscience insights.
 
 ## Features
 
 - **Dual Clocks** — Live time in Mindelo (CVT, UTC-1) and Lausanne (CET/CEST) with smooth second-by-second updates
-- **"What's Happening Now"** — Contextual messages about daily life in each city based on the current local time
+- **Around this hour** — Authored scenes of daily life in each city for the current local hour, with weekday, weekend, and seasonal variants
 - **Weather Comparison** — Side-by-side live weather via Open-Meteo API (free, no key needed)
-- **Cultural Calendar** — Upcoming holidays and events for Cabo Verde and Switzerland
-- **Daily Brain Insight** — Rotating neuroscience tips about circadian rhythms, jet lag, time perception, and more
+- **Cultural Calendar** — Recurring holidays and observances for Cabo Verde and Switzerland; annual festival dates are omitted until confirmed
+- **Across the bridge** — Seven shared challenges you can cycle through in English, French, and Portuguese
+- **Daily AI invitation** — A conversation starter with curated city facts; live weather is excluded from daily cached prompts
+- **Daily Brain Insight** — Nine rotating tips on circadian rhythms, jet lag, sleep timing, and time perception
 - **Mobile Responsive** — Works on phone and desktop
 
 ## Deployment on GitHub Pages
@@ -46,8 +48,13 @@ Your site will be live at: `https://YOUR_USERNAME.github.io/mindelo-lausanne-tim
 
 ```
 mindelo-lausanne-time-bridge/
-├── index.html    # The entire app (HTML + CSS + JS in one file)
-├── README.md     # This file
+├── index.html          # Page markup
+├── styles.css          # Styles for both city palettes
+├── src/js/app.js       # App logic, i18n strings, and authored content
+├── src/js/core/        # Pure modules (time zones, call windows, challenges, AI parsing)
+├── worker/             # Cloudflare Worker for the daily AI invitation
+├── tests/              # node --test suites (npm test)
+├── README.md           # This file
 └── CLAUDE.md     # Project context for Claude Code
 ```
 

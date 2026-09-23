@@ -12,7 +12,7 @@ import {
 
 const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 const DEFAULT_DAILY_AI_CALL_LIMIT = 5;
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const BUDGET_VERSION = 'v1';
 
 export default {
@@ -58,6 +58,10 @@ async function handleInsight(request, env, url, dailyLimit) {
     return json({ error: 'Invalid JSON payload' }, 400, env);
   }
 
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload) ||
+      (payload.lang !== undefined && typeof payload.lang !== 'string')) {
+    return json({ error: 'Expected an object with an optional language string' }, 400, env);
+  }
   const lang = normalizeLang((payload.lang || 'en').toLowerCase());
   const day = new Date().toISOString().slice(0, 10);
   const cache = caches.default;

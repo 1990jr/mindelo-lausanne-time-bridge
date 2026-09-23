@@ -1044,3 +1044,20 @@ body::after {
     gap: 0.46rem;
   }
 }
+
+.challenge-next {
+  margin: 1.4rem auto 0.8rem;
+  padding: 0.8rem 1.3rem;
+  border: 1px solid var(--ink-strong);
+  border-radius: 999px;
+  background: var(--ink-strong);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+.challenge-next:hover { background: var(--ch-mountain); }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--cv-water); outline-offset: 4px; }
+.fact-sources { margin-top: 1rem; font-size: 0.8rem; }
+.fact-sources a { color: var(--ink); text-underline-offset: 3px; }

@@ -21,3 +21,21 @@ test('getMinutesInTZ returns minute-of-day in target timezone', () => {
   assert.equal(mindeloMinutes, (11 * 60) + 30);
   assert.equal(lausanneMinutes, (13 * 60) + 30);
 });
+
+test('timezone offsets remain correct through DST gaps in the browser timezone', async () => {
+  const { getTimezoneOffset } = await import('../../src/js/core/time.js');
+  const previous = process.env.TZ;
+  try {
+    process.env.TZ = 'Europe/Zurich';
+    for (const [iso, expected] of [
+      ['2026-03-29T00:30:00Z', 60], ['2026-03-29T01:30:00Z', 120],
+      ['2026-03-29T02:30:00Z', 120], ['2026-10-25T01:30:00Z', 60],
+    ]) {
+      assert.equal(getTimezoneOffset(new Date(iso), 'Europe/Zurich'), expected);
+      assert.equal(getTimezoneOffset(new Date(iso), 'Atlantic/Cape_Verde'), -60);
+    }
+  } finally {
+    if (previous === undefined) delete process.env.TZ;
+    else process.env.TZ = previous;
+  }
+});

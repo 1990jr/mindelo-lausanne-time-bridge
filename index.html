@@ -49,12 +49,12 @@
     <!-- What's Happening Now -->
     <section class="happening-section">
         <div class="happening-panel happening-cv">
-            <div class="happening-label" id="happeningLabelCv">Right now in Mindelo</div>
+            <div class="happening-label" id="happeningLabelCv">Around this hour in Mindelo</div>
             <span class="happening-emoji" id="happeningCvEmoji">☀️</span>
             <div class="happening-text" id="happeningCv">Loading...</div>
         </div>
         <div class="happening-panel happening-ch">
-            <div class="happening-label" id="happeningLabelCh">Right now in Lausanne</div>
+            <div class="happening-label" id="happeningLabelCh">Around this hour in Lausanne</div>
             <span class="happening-emoji" id="happeningChEmoji">🏔️</span>
             <div class="happening-text" id="happeningCh">Loading...</div>
         </div>
@@ -83,6 +83,16 @@
         </div>
     </section>
 
+    <!-- Shared challenge -->
+    <section class="neuro-section" id="challengeSection">
+        <h2 id="challengeTitle">Across the bridge</h2>
+        <div class="neuro-category" id="challengeCategory">Loading...</div>
+        <span class="neuro-emoji" id="challengeEmoji">🎲</span>
+        <div class="neuro-tip" id="challengeText" aria-live="polite">Loading your challenge...</div>
+        <button id="challengeNext" class="challenge-next" type="button">↻ Another challenge</button>
+        <div class="neuro-source" id="challengeSource"></div>
+    </section>
+
     <!-- AI Insight -->
     <div class="section-title">
         <h2 id="aiTitle">AI Daily Insight</h2>
@@ -95,7 +105,8 @@
                 <div class="ai-status" id="aiStatus">Generating daily insight...</div>
                 <button class="ai-log-download-btn" id="aiLogDownloadBtn" type="button">Download message log</button>
             </div>
-            <div class="ai-output" id="aiOutput">When connected, this will summarize today in Mindelo and Lausanne.</div>
+            <div class="ai-output" id="aiOutput">When connected, today's conversation invitation for Mindelo and Lausanne appears here.</div>
+            <p class="fact-sources"><a href="https://en.wikipedia.org/wiki/Mindelo" target="_blank" rel="noopener">Mindelo · Wikipedia ↗</a> · <a href="https://www.lausanne-tourisme.ch/en/olympic-capital/" target="_blank" rel="noopener">Lausanne Tourisme ↗</a></p>
         </div>
     </section>
 

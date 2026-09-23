@@ -1,9 +1,12 @@
 export function getTimezoneOffset(date, tz) {
-  const utcStr = date.toLocaleString('en-US', { timeZone: 'UTC' });
-  const tzStr = date.toLocaleString('en-US', { timeZone: tz });
-  const utcDate = new Date(utcStr);
-  const tzDate = new Date(tzStr);
-  return (tzDate - utcDate) / 60000;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date);
+  const value = type => Number(parts.find(part => part.type === type).value);
+  const wallTime = Date.UTC(value('year'), value('month') - 1, value('day'),
+    value('hour'), value('minute'), value('second'));
+  return (wallTime - Math.floor(date.getTime() / 1000) * 1000) / 60000;
 }
 
 export function isSwissDST(date, lausanneTz) {

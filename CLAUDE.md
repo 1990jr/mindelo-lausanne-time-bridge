@@ -1,11 +1,13 @@
 # Mindelo-Lausanne Time Bridge
 
 ## Project Overview
-Single-page static web app connecting Mindelo (Cabo Verde) and Lausanne (Switzerland) with dual clocks, weather, cultural calendar, and neuroscience tips. Designed for GitHub Pages deployment.
+Single-page static web app connecting Mindelo (Cabo Verde) and Lausanne (Switzerland) with dual clocks, authored hourly scenes, weather, cultural calendar, shared call challenges, a daily AI invitation, and neuroscience tips. Designed for GitHub Pages deployment.
 
 ## Architecture
-- **Single file**: `index.html` contains all HTML, CSS, and JavaScript
-- **No build tools**: Pure vanilla JS, no frameworks or bundlers
+- **Frontend**: `index.html` (markup), `styles.css`, `src/js/app.js` (logic, i18n strings, authored content), pure modules in `src/js/core/`
+- **Backend**: Cloudflare Worker in `worker/` generates the daily AI invitation (Workers AI), cached per day and language
+- **Tests**: `npm test` runs `node --test` over `tests/`
+- **No build tools**: Pure vanilla JS ES modules, no frameworks or bundlers
 - **External deps**: Google Fonts (Inter, Playfair Display) via CDN
 - **API**: Open-Meteo for weather data (free, no API key needed)
 
@@ -14,7 +16,7 @@ Single-page static web app connecting Mindelo (Cabo Verde) and Lausanne (Switzer
 ### Timezones
 - Mindelo: `Atlantic/Cape_Verde` (UTC-1 year-round, no DST)
 - Lausanne: `Europe/Zurich` (CET UTC+1 / CEST UTC+2)
-- Time difference is dynamic (1h in summer, 2h in winter) — calculated from actual offsets
+- Time difference is dynamic (3h in summer, 2h in winter), calculated from actual offsets with `Intl.DateTimeFormat` parts so it stays correct through DST transitions
 
 ### Weather API
 - Uses Open-Meteo (https://open-meteo.com/) — free, no API key required
@@ -26,18 +28,27 @@ Single-page static web app connecting Mindelo (Cabo Verde) and Lausanne (Switzer
 
 ### Cultural Calendar
 - Easter date is computed algorithmically (Anonymous Gregorian algorithm) to derive moveable holidays
-- Cabo Verde: all national public holidays + Mindelo-specific events (Carnaval, São Vicente Day, Baía das Gatas, São João/Kola San Djon, Mindelact, Réveillon)
-- Lausanne & Vaud: 9 official Vaud holidays + 14 festivals/cultural events
-  - Festivals: Prix de Lausanne, BDFIL, Balélec, Festival de la Cité, Montreux Jazz, Paléo Nyon, LUFF, Les Urbaines, Bô Noël
-  - Sports: Athletissima (Diamond League), Lausanne Marathon
-  - Wine: Caves Ouvertes Vaudoises, Vendanges in Lavaux
-  - Music: Fête de la Musique
+- Cabo Verde: all national public holidays + Mindelo-specific observances with fixed or computable dates (Carnaval, São Vicente Day, São João/Kola San Djon, Réveillon)
+- Lausanne & Vaud: 9 official Vaud holidays + Fête de la Musique
+- Festivals whose dates change every year (Baía das Gatas, Mindelact, Montreux Jazz, Paléo, Prix de Lausanne, etc.) were removed on 2026-09-23 because hardcoded dates were wrong most years. Re-add them only with confirmed yearly dates.
 - Federal Fast Monday calculated dynamically (Monday after 3rd Sunday of September)
 - Past events are shown dimmed and sorted after upcoming ones
 
+### Around This Hour (happening panels)
+- Authored scenes per city and hour, with weekday, Saturday, and Sunday variants (Lausanne Sundays vary by season)
+- Labelled "Around this hour", not "Right now": they are evocative, not live reports. AI output no longer overrides them.
+
+### Shared Challenges
+- Seven mini-games for a call (`src/js/core/bridge-play.js`), same order in EN/FR/PT, cycled with a button
+
+### Daily AI Invitation
+- Worker prompt receives only the language and three curated facts (`worker/src/facts.js`); client context is never sent, because the response is cached for everyone all day
+- Facts must stay aligned by index across languages and be checked against the sources listed in `facts.js`
+
 ### Neuroscience Tips
-- 15 tips rotating daily based on day-of-year modulo
-- Topics: circadian rhythms, jet lag, sleep, saudade, bilingualism, chronotypes, etc.
+- 9 tips rotating daily based on day-of-year modulo
+- Topics: circadian rhythms, jet lag, time perception, social jetlag, light, reminiscence bump, body temperature, napping, meal timing
+- Removed 2026-09-23 as overstated or contested: glymphatic clearance, chronotype genetics, sodade and reward circuits, bilingual cognitive reserve, altitude, "blue mind"
 
 ## Deployment
 - GitHub Pages from main branch, root folder
