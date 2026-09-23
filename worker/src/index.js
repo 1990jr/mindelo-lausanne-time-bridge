@@ -5,14 +5,15 @@ import {
   extractStructuredPayload,
   normalizeDailyPayload,
   normalizeLang,
-  isGroundedInFacts,
   isExpectedLanguage,
   pickDailyFacts,
 } from './insight-pipeline.js';
 
-const DEFAULT_MODEL = '@cf/meta/llama-3.1-8b-instruct';
+// @cf/meta/llama-3.1-8b-instruct was deprecated on 2026-05-30. Override with the
+// AI_MODEL var when this one is retired: https://developers.cloudflare.com/workers-ai/models/
+const DEFAULT_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const DEFAULT_DAILY_AI_CALL_LIMIT = 5;
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v7';
 const BUDGET_VERSION = 'v1';
 
 export default {
@@ -75,7 +76,7 @@ async function handleInsight(request, env, url, dailyLimit) {
     const fallback = buildSafeFallbackPayload(lang, fallbackFacts);
     return json({
       ...fallback,
-      model: DEFAULT_MODEL,
+      model: getModel(env),
       cached: false,
       day,
       mode: 'fallback-daily-limit-reached',
@@ -90,31 +91,36 @@ async function handleInsight(request, env, url, dailyLimit) {
     origin: url.origin,
     day,
     hardLimit: dailyLimit,
-    model: DEFAULT_MODEL,
+    model: getModel(env),
   });
 
   let content = null;
-  let mode = 'fallback';
+  let mode = 'single-call';
+  let text = '';
+  let raw = null;
   try {
     const prompt = buildGeneratorPrompt(payload, lang, facts);
-    const text = extractText(await runAi(prompt));
-    const parsed = extractStructuredPayload(text);
-    content = normalizeDailyPayload(parsed);
-    mode = content ? 'single-call' : 'fallback-invalid-generator';
+    raw = await runAi(prompt);
+    text = extractText(raw);
+    content = normalizeDailyPayload(extractStructuredPayload(text), facts);
   } catch (err) {
     console.error('[insight] generation failed:', err?.message || err);
-    content = null;
+    mode = 'fallback-error';
   }
 
-  if (!content || !isGroundedInFacts(content, facts) || !isExpectedLanguage(content, lang)) {
+  if (mode === 'single-call') {
+    if (!content) mode = 'fallback-invalid-generator';
+    else if (!isExpectedLanguage(content, lang)) mode = 'fallback-wrong-language';
+  }
+  if (mode !== 'single-call') {
+    console.warn(`[insight] ${mode} (${lang}):`, (text || JSON.stringify(raw) || '').slice(0, 500));
     content = buildSafeFallbackPayload(lang, facts);
-    mode = 'fallback-grounded';
   }
 
   const currentBudget = await readDailyBudget(cache, url.origin, day);
   const response = new Response(JSON.stringify({
     ...content,
-    model: DEFAULT_MODEL,
+    model: getModel(env),
     cached: false,
     day,
     mode,
@@ -123,7 +129,8 @@ async function handleInsight(request, env, url, dailyLimit) {
     status: 200,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=86400',
+      // A fallback is retried within the hour, still bounded by the daily AI budget.
+      'Cache-Control': `public, max-age=${mode === 'single-call' ? 86400 : 3600}`,
       ...corsHeaders(env),
     },
   });
@@ -145,6 +152,10 @@ function makeAiRunner({ env, cache, origin, day, hardLimit, model }) {
     });
     return raw;
   };
+}
+
+function getModel(env) {
+  return env.AI_MODEL || DEFAULT_MODEL;
 }
 
 function getDailyLimit(env) {

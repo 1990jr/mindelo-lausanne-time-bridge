@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import {
   pickDailyFacts,
   normalizeDailyPayload,
-  isGroundedInFacts,
   isExpectedLanguage,
   buildSafeFallbackPayload,
   extractStructuredPayload,
+  extractText,
 } from '../../worker/src/insight-pipeline.js';
 import { FACTS_BY_LANG } from '../../worker/src/facts.js';
 
@@ -16,22 +16,13 @@ test('pickDailyFacts is deterministic for same day/lang', () => {
   assert.deepEqual(a, b);
 });
 
-test('normalizeDailyPayload validates expected schema', () => {
-  const payload = {
-    insight: 'Daily bridge insight.',
-    disclaimer: 'AI-generated content may contain mistakes.',
-    facts: { common: 'c', mindelo: 'm', lausanne: 'l' },
-  };
-  assert.ok(normalizeDailyPayload(payload));
-  assert.equal(normalizeDailyPayload({ insight: '  ' }), null);
-});
-
-test('isGroundedInFacts checks exact fact agreement', () => {
+test('normalizeDailyPayload keeps the insight and attaches curated facts', () => {
   const facts = { common: 'c', mindelo: 'm', lausanne: 'l' };
-  const ok = { facts: { common: 'c', mindelo: 'm', lausanne: 'l' } };
-  const bad = { facts: { common: 'c2', mindelo: 'm', lausanne: 'l' } };
-  assert.equal(isGroundedInFacts(ok, facts), true);
-  assert.equal(isGroundedInFacts(bad, facts), false);
+  const normalized = normalizeDailyPayload({ insight: ' Daily bridge insight. ', facts: { common: 'rewritten' } }, facts);
+  assert.equal(normalized.insight, 'Daily bridge insight.');
+  assert.deepEqual(normalized.facts, facts);
+  assert.equal(normalizeDailyPayload({ insight: '  ' }, facts), null);
+  assert.equal(normalizeDailyPayload(null, facts), null);
 });
 
 test('buildSafeFallbackPayload reuses grounded facts', () => {
@@ -73,4 +64,13 @@ test('generator excludes untrusted and time-sensitive client context', async () 
   const prompt = buildGeneratorPrompt({ weatherMindelo: 'FAKE SUNNY WEATHER', lang: 'en' }, 'en', pickDailyFacts('2026-09-20', 'en'));
   assert.ok(!prompt.includes('FAKE SUNNY WEATHER'));
   assert.ok(prompt.includes('cached all day'));
+});
+
+test('extractText reads every Workers AI response shape', () => {
+  const json = '{"insight":"Pick a song."}';
+  assert.equal(extractText({ response: ` ${json} ` }), json);
+  assert.equal(extractText({ response: { insight: 'Pick a song.' } }), json);
+  assert.equal(extractText({ choices: [{ message: { content: json } }] }), json);
+  assert.equal(extractStructuredPayload(extractText({ response: { insight: 'Pick a song.' } })).insight, 'Pick a song.');
+  assert.equal(extractText({ usage: {} }), '');
 });

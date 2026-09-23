@@ -43,6 +43,10 @@ export function extractText(result) {
   if (!result) return '';
   if (typeof result === 'string') return result.trim();
   if (typeof result.response === 'string') return result.response.trim();
+  // Some Workers AI models hand back JSON output already parsed.
+  if (result.response && typeof result.response === 'object') return JSON.stringify(result.response);
+  const content = result.choices?.[0]?.message?.content;
+  if (typeof content === 'string') return content.trim();
   if (Array.isArray(result.result) && result.result[0] && typeof result.result[0].text === 'string') {
     return result.result[0].text.trim();
   }
@@ -78,19 +82,19 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-export function normalizeDailyPayload(payload) {
+// The model only writes the insight. Facts are attached here, so they are
+// always the curated strings rather than the model's copy of them.
+export function normalizeDailyPayload(payload, facts) {
   if (!payload || typeof payload !== 'object') return null;
   if (!isNonEmptyString(payload.insight)) return null;
 
   return {
     insight: payload.insight.trim(),
-    disclaimer: isNonEmptyString(payload.disclaimer)
-      ? payload.disclaimer.trim()
-      : DEFAULT_DISCLAIMER,
+    disclaimer: DEFAULT_DISCLAIMER,
     facts: {
-      common: isNonEmptyString(payload?.facts?.common) ? payload.facts.common.trim() : '',
-      mindelo: isNonEmptyString(payload?.facts?.mindelo) ? payload.facts.mindelo.trim() : '',
-      lausanne: isNonEmptyString(payload?.facts?.lausanne) ? payload.facts.lausanne.trim() : '',
+      common: facts.common,
+      mindelo: facts.mindelo,
+      lausanne: facts.lausanne,
     },
   };
 }
@@ -107,15 +111,6 @@ export function normalizeReviewPayload(payload) {
     issues,
     reason: isNonEmptyString(payload.reason) ? payload.reason.trim() : '',
   };
-}
-
-export function isGroundedInFacts(content, facts) {
-  if (!content || !content.facts || !facts) return false;
-  return (
-    content.facts.common === facts.common &&
-    content.facts.mindelo === facts.mindelo &&
-    content.facts.lausanne === facts.lausanne
-  );
 }
 
 function countMarkerHits(text, markers) {
@@ -167,23 +162,18 @@ export function buildGeneratorPrompt(payload, lang, facts) {
     'Do not add facts, neuroscience, weather, events, opening hours, crowds, or claims about what residents are doing.',
     'This response is cached all day: never refer to current conditions, now, or a time difference.',
     `Output language: ${normalizeLang(lang)}.`,
-    'Return strict JSON only.',
-    'You MUST use the fact strings exactly as provided, without rewriting:',
-    `common_fact: ${facts.common}`,
-    `mindelo_fact: ${facts.mindelo}`,
-    `lausanne_fact: ${facts.lausanne}`,
-    'Schema:',
-    '{',
-    '  "insight": "2-4 concise sentences",',
-    `  "disclaimer": "${DEFAULT_DISCLAIMER}",`,
-    '  "facts": { "common": "...", "mindelo": "...", "lausanne": "..." }',
-    '}',
+    'Facts you may draw on:',
+    `- ${facts.common}`,
+    `- ${facts.mindelo}`,
+    `- ${facts.lausanne}`,
+    'Return strict JSON only, with no text before or after it:',
+    '{ "insight": "2-4 concise sentences" }',
     'Context:',
     stringifyContext({ lang: normalizeLang(lang) }),
   ].join('\n');
 }
 
-// buildReviewerPrompt and buildRevisionPrompt were removed — the consensus
+// buildReviewerPrompt and buildRevisionPrompt were removed. The consensus
 // pipeline was replaced by a single-call generation flow to reduce AI budget
-// usage by 60-80%.  The server-side validators (isGroundedInFacts,
-// isExpectedLanguage, normalizeDailyPayload) provide sufficient quality gates.
+// usage by 60-80%. Server-side checks (normalizeDailyPayload,
+// isExpectedLanguage) are the quality gates; facts are attached server-side.
