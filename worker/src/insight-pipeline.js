@@ -1,6 +1,12 @@
 import { FACTS_BY_LANG, SUPPORTED_LANGS } from './facts.js';
 
 export const DEFAULT_DISCLAIMER = 'AI-generated content may contain mistakes.';
+// Cabo Verde writes European Portuguese; models default to Brazilian forms.
+const LANGUAGE_NAMES = {
+  en: 'English',
+  fr: 'French',
+  pt: 'European Portuguese (pt-PT, as written in Cabo Verde), not Brazilian Portuguese',
+};
 const LANGUAGE_MARKERS = {
   en: [' the ', ' and ', ' with ', ' in ', ' today ', ' both ', ' city '],
   fr: [' le ', ' la ', ' les ', ' et ', ' dans ', ' aujourd', ' avec '],
@@ -161,7 +167,7 @@ export function buildGeneratorPrompt(payload, lang, facts) {
     'Use one concrete hook from the supplied facts. Avoid generic waterfront rhythm prose.',
     'Do not add facts, neuroscience, weather, events, opening hours, crowds, or claims about what residents are doing.',
     'This response is cached all day: never refer to current conditions, now, or a time difference.',
-    `Output language: ${normalizeLang(lang)}.`,
+    `Output language: ${LANGUAGE_NAMES[normalizeLang(lang)]}.`,
     'Facts you may draw on:',
     `- ${facts.common}`,
     `- ${facts.mindelo}`,

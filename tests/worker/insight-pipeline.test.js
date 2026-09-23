@@ -64,6 +64,7 @@ test('generator excludes untrusted and time-sensitive client context', async () 
   const prompt = buildGeneratorPrompt({ weatherMindelo: 'FAKE SUNNY WEATHER', lang: 'en' }, 'en', pickDailyFacts('2026-09-20', 'en'));
   assert.ok(!prompt.includes('FAKE SUNNY WEATHER'));
   assert.ok(prompt.includes('cached all day'));
+  assert.ok(buildGeneratorPrompt({}, 'pt', pickDailyFacts('2026-09-20', 'pt')).includes('European Portuguese'));
 });
 
 test('extractText reads every Workers AI response shape', () => {
