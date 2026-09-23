@@ -45,11 +45,17 @@ test('frontend starts, shuffles challenges, and ignores an old-language response
     pending[1].resolve({ ok: true, json: async () => ({ insight: 'Une invitation en français.' }) });
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(elements.get('aiOutput').textContent, 'Une invitation en français.');
+    assert.ok([...storage.values()].some(value => value.includes('Une invitation en français.')));
     window.setLanguage('pt');
     assert.match(elements.get('challengeNext').textContent, /Outro desafio/);
     pending[2].resolve({ ok: false, status: 503 });
     await new Promise(resolve => setImmediate(resolve));
     assert.ok(elements.get('aiOutput').textContent.length > 30);
+    window.setLanguage('en');
+    pending[3].resolve({ ok: true, json: async () => ({ insight: 'Fallback mission text.', mode: 'fallback-error' }) });
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(elements.get('aiOutput').textContent, 'Fallback mission text.');
+    assert.ok(![...storage.values()].some(value => value.includes('Fallback mission text.')));
   } finally {
     globalThis.setInterval = originalInterval;
   }

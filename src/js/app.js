@@ -1072,7 +1072,9 @@
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 if (requestLang !== currentLang) return;
-                const didApply = applyAiDailyContent(data, { persist: true, day, lang: requestLang });
+                // Fallbacks are not cached so the next visit can pick up a real insight.
+                const persist = !String(data?.mode || '').startsWith('fallback');
+                const didApply = applyAiDailyContent(data, { persist, day, lang: requestLang });
                 if (!didApply) throw new Error('No insight in response');
             } catch (err) {
                 if (requestLang !== currentLang) return;
