@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 test('frontend starts, shuffles challenges, and ignores an old-language response', async () => {
   const html = await readFile(new URL('../../index.html', import.meta.url), 'utf8');
+  assert.doesNotMatch(html, /class="brand-signature"|id="brandCredit"/);
   const elements = new Map([...html.matchAll(/id="([^"]+)"/g)].map(([, id]) => [id, {
     textContent: '', innerHTML: '', dataset: {}, classList: { toggle() {}, add() {} },
     addEventListener() {},
@@ -40,6 +41,7 @@ test('frontend starts, shuffles challenges, and ignores an old-language response
     await import('../../src/js/app.js');
     await start();
     assert.match(elements.get('timeMindelo').innerHTML, /\d\d:\d\d/);
+    assert.match(elements.get('converterCvTime').textContent, /\d\d:\d\d/);
     assert.ok(elements.get('happeningCv').textContent.length > 10);
     assert.notEqual(elements.get('happeningCv').textContent, elements.get('happeningCh').textContent);
     assert.ok(elements.get('neuroTip').textContent.length > 30);
@@ -47,6 +49,7 @@ test('frontend starts, shuffles challenges, and ignores an old-language response
     elements.get('challengeNext').onclick();
     assert.notEqual(elements.get('challengeText').textContent, first);
     window.setLanguage('fr');
+    assert.equal(elements.get('converterTimeLabel').textContent, 'Heure');
     assert.equal(buttons[1].attributes['aria-pressed'], 'true');
     assert.equal(buttons[0].attributes['aria-pressed'], 'false');
     pending[0].resolve({ ok: true, json: async () => ({ insight: 'Old English response' }) });

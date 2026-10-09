@@ -1,5 +1,6 @@
     import { getTimezoneOffset, isSwissDST, getDayTypeInTZ, getHourInTZ } from './core/time.js';
     import { getOverlapWindows } from './core/call-windows.js';
+    import { getLocalDateTime, resolveLocalDateTime } from './core/date-time.js';
     import { selectSceneByHour } from './core/happening.js';
     import { getChallenge } from './core/bridge-play.js';
     import { normalizeAiDailyContent } from './core/ai-daily.js';
@@ -45,7 +46,18 @@
         const LOCALES = { en: 'en-GB', fr: 'fr-FR', pt: 'pt-PT' };
 
         const T = {
-            brandCredit:        { en: 'A personal project by', fr: 'Un projet personnel de', pt: 'Um projeto pessoal de' },
+            navConverter:       { en: 'Convert a time', fr: 'Convertir une heure', pt: 'Converter hora' },
+            converterTitle:     { en: 'When it’s…', fr: 'Quand il est…', pt: 'Quando são…' },
+            converterSubtitle:  { en: 'Choose a date and time in either city. Daylight saving is included.', fr: 'Choisissez une date et une heure dans une ville. Le changement d’heure est pris en compte.', pt: 'Escolha uma data e hora numa das cidades. A mudança de hora é tida em conta.' },
+            converterCityLabel: { en: 'Time in', fr: 'Heure à', pt: 'Hora em' },
+            converterDateLabel: { en: 'Date', fr: 'Date', pt: 'Data' },
+            converterTimeLabel: { en: 'Time', fr: 'Heure', pt: 'Hora' },
+            converterOccurrenceLabel: { en: 'Which occurrence?', fr: 'Quelle occurrence ?', pt: 'Qual ocorrência?' },
+            converterFirst:     { en: 'First occurrence', fr: 'Première occurrence', pt: 'Primeira ocorrência' },
+            converterSecond:    { en: 'Second occurrence', fr: 'Deuxième occurrence', pt: 'Segunda ocorrência' },
+            converterInvalid:   { en: 'Choose a valid date and time to see both cities.', fr: 'Choisissez une date et une heure valides pour voir les deux villes.', pt: 'Escolha uma data e hora válidas para ver as duas cidades.' },
+            converterGap:       { en: 'This time does not exist in Lausanne because the clocks move forward. Choose another time.', fr: 'Cette heure n’existe pas à Lausanne en raison du passage à l’heure d’été. Choisissez une autre heure.', pt: 'Esta hora não existe em Lausanne devido ao avanço do relógio. Escolha outra hora.' },
+            converterRepeated:  { en: 'This time happens twice in Lausanne when the clocks go back. Choose which occurrence you mean.', fr: 'Cette heure se produit deux fois à Lausanne lors du passage à l’heure d’hiver. Choisissez l’occurrence souhaitée.', pt: 'Esta hora ocorre duas vezes em Lausanne quando o relógio atrasa. Escolha a ocorrência pretendida.' },
             headerEyebrow:      { en: 'Two cities. One connection.', fr: 'Deux villes. Un lien.', pt: 'Duas cidades. Uma ligação.' },
             skipLink:           { en: 'Skip to clocks', fr: 'Aller aux horloges', pt: 'Saltar para os relógios' },
             navCall:            { en: 'Call times', fr: 'Quand appeler', pt: 'Quando ligar' },
@@ -763,7 +775,9 @@
 
             // Update static text elements
             const staticKeys = [
-                'skipLink', 'navCall', 'navWeather', 'navCalendar', 'navMedia',
+                'skipLink', 'navConverter', 'navCall', 'navWeather', 'navCalendar', 'navMedia',
+                'converterTitle', 'converterSubtitle', 'converterCityLabel', 'converterDateLabel', 'converterTimeLabel',
+                'converterOccurrenceLabel', 'converterFirst', 'converterSecond',
                 'headerEyebrow', 'subtitle', 'locationCv', 'locationCh',
                 'happeningLabelCv', 'happeningLabelCh',
                 'callTitle', 'callSubtitle', 'callHoursCvLabel', 'callHoursChLabel',
@@ -773,7 +787,7 @@
                 'calendarTitle', 'calendarSubtitle',
                 'mediaTitle', 'mediaSubtitle', 'mediaCvTitle', 'mediaChTitle',
                 'challengeTitle', 'challengeSource', 'challengeNext',
-                'neuroTitle', 'footerBrand', 'footerText', 'brandCredit'
+                'neuroTitle', 'footerBrand', 'footerText'
             ];
             staticKeys.forEach(key => {
                 const el = document.getElementById(key);
@@ -802,6 +816,7 @@
             updateHappening(new Date());
             renderCalendar();
             renderChallenge();
+            renderDateConverter();
             renderNeuroTip();
             refreshWeatherMeta();
             initAiInsight();
@@ -811,6 +826,61 @@
 
         // Make setLanguage global for onclick handlers
         window.setLanguage = setLanguage;
+
+        // ---- Date and time converter ----
+        function formatUtcOffset(instant, timeZone) {
+            const minutes = getTimezoneOffset(instant, timeZone);
+            const absolute = Math.abs(minutes);
+            return `UTC${minutes < 0 ? '−' : '+'}${String(Math.floor(absolute / 60)).padStart(2, '0')}:${String(Math.floor(absolute % 60)).padStart(2, '0')}`;
+        }
+
+        function renderDateConverter() {
+            const city = document.getElementById('converterCity').value;
+            const timeZone = city === 'ch' ? LAUSANNE_TZ : MINDELO_TZ;
+            const date = document.getElementById('converterDate').value;
+            const time = document.getElementById('converterTime').value;
+            const resolved = resolveLocalDateTime(date, time, timeZone);
+            const notice = document.getElementById('converterNotice');
+            const results = document.getElementById('converterResults');
+            const occurrence = document.getElementById('converterOccurrence');
+            const ambiguous = resolved.status === 'ambiguous';
+            const valid = resolved.instants.length > 0;
+            document.getElementById('converterOccurrenceField').hidden = !ambiguous;
+            results.hidden = !valid;
+            const messageKey = ambiguous ? 'converterRepeated' : resolved.status === 'nonexistent' ? 'converterGap' : valid ? null : 'converterInvalid';
+            notice.hidden = !messageKey;
+            notice.textContent = messageKey ? T[messageKey][currentLang] : '';
+            if (!valid) return;
+
+            if (ambiguous) {
+                ['converterFirst', 'converterSecond'].forEach((id, index) => {
+                    document.getElementById(id).textContent = `${T[id][currentLang]} · ${formatUtcOffset(resolved.instants[index], timeZone)}`;
+                });
+            }
+            const instant = resolved.instants[ambiguous && occurrence.value === '1' ? 1 : 0];
+            [['Cv', MINDELO_TZ], ['Ch', LAUSANNE_TZ]].forEach(([key, tz]) => {
+                const timeEl = document.getElementById(`converter${key}Time`);
+                timeEl.textContent = instant.toLocaleTimeString(LOCALES[currentLang], { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+                timeEl.dateTime = instant.toISOString();
+                document.getElementById(`converter${key}Date`).textContent = instant.toLocaleDateString(LOCALES[currentLang], { timeZone: tz, weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+                document.getElementById(`converter${key}Offset`).textContent = formatUtcOffset(instant, tz);
+            });
+        }
+
+        function initDateConverter() {
+            const local = getLocalDateTime(new Date(), MINDELO_TZ);
+            document.getElementById('converterCity').value = 'cv';
+            document.getElementById('converterDate').value = local.date;
+            document.getElementById('converterTime').value = local.time;
+            document.getElementById('converterOccurrence').value = '0';
+            ['converterCity', 'converterDate', 'converterTime'].forEach(id => {
+                document.getElementById(id).addEventListener('input', () => {
+                    document.getElementById('converterOccurrence').value = '0';
+                    renderDateConverter();
+                });
+            });
+            document.getElementById('converterOccurrence').addEventListener('change', renderDateConverter);
+        }
 
         // ---- Clock & Time ----
         function updateClocks() {
@@ -1558,6 +1628,7 @@
 
         // ---- Initialize ----
         async function init() {
+            initDateConverter();
             document.getElementById('challengeNext').onclick = () => {
                 challengeIndex += 1;
                 renderChallenge();

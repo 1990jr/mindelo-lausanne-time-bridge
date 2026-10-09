@@ -18,7 +18,6 @@
 
     <!-- Header -->
     <header class="bridge-header">
-        <a class="brand-signature" href="https://janirramosdacruz.cv/">Janir Ramos da Cruz <span aria-hidden="true">↗</span></a>
         <p class="header-eyebrow" id="headerEyebrow">TWO CITIES. ONE CONNECTION.</p>
         <h1>Mindelo <span class="bridge-icon" aria-hidden="true">↔</span> Lausanne</h1>
         <p class="subtitle" id="subtitle">A bridge between two homes</p>
@@ -30,6 +29,7 @@
     </header>
 
     <nav class="section-nav" aria-label="Mindelo ↔ Lausanne">
+        <a id="navConverter" href="#converterTitle">Convert a time</a>
         <a id="navCall" href="#callTitle">Call times</a>
         <a id="navWeather" href="#weatherTitle">Weather</a>
         <a id="navCalendar" href="#calendarTitle">Calendar</a>
@@ -75,6 +75,54 @@
             <div class="happening-label" id="happeningLabelCh">Around this hour in Lausanne</div>
             <span class="happening-emoji" id="happeningChEmoji">🏔️</span>
             <div class="happening-text" id="happeningCh">Loading...</div>
+        </div>
+    </section>
+
+    <!-- Date and time converter -->
+    <div class="section-title">
+        <h2 id="converterTitle">When it’s…</h2>
+        <p id="converterSubtitle">Choose a date and time in either city. Daylight saving is included.</p>
+    </div>
+    <section class="converter-section" aria-labelledby="converterTitle">
+        <div class="converter-fields">
+            <div class="converter-field">
+                <label for="converterCity" id="converterCityLabel">Time in</label>
+                <select id="converterCity">
+                    <option value="cv">Mindelo</option>
+                    <option value="ch">Lausanne</option>
+                </select>
+            </div>
+            <div class="converter-field">
+                <label for="converterDate" id="converterDateLabel">Date</label>
+                <input id="converterDate" type="date" min="0001-01-01" max="9999-12-31" required>
+            </div>
+            <div class="converter-field">
+                <label for="converterTime" id="converterTimeLabel">Time</label>
+                <input id="converterTime" type="time" step="60" required>
+            </div>
+        </div>
+        <div class="converter-field converter-occurrence" id="converterOccurrenceField" hidden>
+            <label for="converterOccurrence" id="converterOccurrenceLabel">Which occurrence?</label>
+            <select id="converterOccurrence" aria-describedby="converterNotice">
+                <option id="converterFirst" value="0">First occurrence</option>
+                <option id="converterSecond" value="1">Second occurrence</option>
+            </select>
+        </div>
+        <p class="converter-notice" id="converterNotice" role="status" hidden></p>
+        <div class="converter-results" id="converterResults" role="status" aria-live="polite" aria-atomic="true">
+            <div class="converter-result converter-result-cv">
+                <h3>🇨🇻 Mindelo</h3>
+                <time id="converterCvTime">--:--</time>
+                <p id="converterCvDate"></p>
+                <span class="converter-offset" id="converterCvOffset"></span>
+            </div>
+            <span class="converter-equals" aria-hidden="true">↔</span>
+            <div class="converter-result converter-result-ch">
+                <h3>🇨🇭 Lausanne</h3>
+                <time id="converterChTime">--:--</time>
+                <p id="converterChDate"></p>
+                <span class="converter-offset" id="converterChOffset"></span>
+            </div>
         </div>
     </section>
 
@@ -315,7 +363,6 @@
     <!-- Footer -->
     <footer class="bridge-footer" id="footer">
         <span id="footerBrand">Mindelo ↔ Lausanne Time Bridge</span> <span class="hearts">♥</span> <span id="footerText">Connecting two homes across the Atlantic</span>
-        <p class="brand-credit"><span id="brandCredit">A personal project by</span> <a href="https://janirramosdacruz.cv/">Janir Ramos da Cruz</a></p>
     </footer>
     <script type="module" src="src/js/app.js"></script>
 </body>

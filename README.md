@@ -4,6 +4,7 @@ A single-page web app that bridges two homes — Mindelo (Cabo Verde) and Lausan
 
 ## Features
 
+- **Date-and-time converter** — Convert either city’s local date and time, including midnight, daylight-saving gaps, and repeated autumn hours; works entirely in the browser
 - **Dual Clocks** — Live time in Mindelo (CVT, UTC-1) and Lausanne (CET/CEST) with smooth second-by-second updates
 - **Around this hour** — Authored scenes of daily life in each city for the current local hour, with weekday, weekend, and seasonal variants
 - **Weather Comparison** — Side-by-side live weather via Open-Meteo API (free, no key needed)
@@ -14,7 +15,6 @@ A single-page web app that bridges two homes — Mindelo (Cabo Verde) and Lausan
 - **Mobile Responsive** — Works on phone and desktop
 - **Accessible navigation** — Section shortcuts, keyboard skip link, named language controls, and reduced-motion support
 - **Resilient startup** — Clocks and language switching work when browser storage is blocked; recent weather is reused across language changes
-- **Shared personal branding** — Newsreader and Atkinson Hyperlegible Next typography, restrained blue accents, and system light/dark themes match [janirramosdacruz.cv](https://janirramosdacruz.cv/), while the bridge keeps its illustrated city cards
 
 ## Deployment on GitHub Pages
 
