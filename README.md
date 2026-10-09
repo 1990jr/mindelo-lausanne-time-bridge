@@ -12,6 +12,8 @@ A single-page web app that bridges two homes — Mindelo (Cabo Verde) and Lausan
 - **Daily AI invitation** — A conversation starter with curated city facts; live weather is excluded from daily cached prompts
 - **Daily Brain Insight** — Nine rotating tips on circadian rhythms, jet lag, sleep timing, and time perception
 - **Mobile Responsive** — Works on phone and desktop
+- **Accessible navigation** — Section shortcuts, keyboard skip link, named language controls, and reduced-motion support
+- **Resilient startup** — Clocks and language switching work when browser storage is blocked; recent weather is reused across language changes
 
 ## Deployment on GitHub Pages
 
@@ -41,7 +43,7 @@ Your site will be live at: `https://YOUR_USERNAME.github.io/mindelo-lausanne-tim
 
 - Pure HTML, CSS, and vanilla JavaScript
 - No build tools, no frameworks, no dependencies
-- Google Fonts (Inter + Playfair Display) loaded via CDN
+- Google Fonts (Manrope + Fraunces) loaded via CDN
 - [Open-Meteo](https://open-meteo.com/) for weather data (free, no API key needed)
 
 ## Project Structure

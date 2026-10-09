@@ -3,23 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Connect Mindelo and Lausanne with live local clocks, shared call times, weather, cultural calendars, and daily conversation starters.">
     <title>Mindelo ↔ Lausanne Time Bridge</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌉</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <a class="skip-link" id="skipLink" href="#mainContent">Skip to clocks</a>
 
     <!-- Header -->
     <header class="bridge-header">
         <h1>Mindelo <span class="bridge-icon">🌉</span> Lausanne</h1>
         <p class="subtitle" id="subtitle">A bridge between two homes</p>
-        <div class="lang-switcher">
-            <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
-            <button class="lang-btn" onclick="setLanguage('fr')">FR</button>
-            <button class="lang-btn" onclick="setLanguage('pt')">PT</button>
+        <div class="lang-switcher" role="group" aria-label="Language / Langue / Idioma">
+            <button class="lang-btn active" type="button" lang="en" aria-label="English" aria-pressed="true" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" type="button" lang="fr" aria-label="Français" aria-pressed="false" onclick="setLanguage('fr')">FR</button>
+            <button class="lang-btn" type="button" lang="pt" aria-label="Português" aria-pressed="false" onclick="setLanguage('pt')">PT</button>
         </div>
     </header>
+
+    <nav class="section-nav" aria-label="Mindelo ↔ Lausanne">
+        <a id="navCall" href="#callTitle">Call times</a>
+        <a id="navWeather" href="#weatherTitle">Weather</a>
+        <a id="navCalendar" href="#calendarTitle">Calendar</a>
+        <a id="navMedia" href="#mediaTitle">News &amp; media</a>
+    </nav>
+
+    <main id="mainContent" tabindex="-1">
+    <noscript><p class="noscript-message">Enable JavaScript to see live clocks, weather, and call times. / Activez JavaScript pour afficher les horloges et la météo. / Ative o JavaScript para ver os relógios e a meteorologia.</p></noscript>
 
     <!-- Time Difference -->
     <div class="time-diff-banner" id="timeDiffBanner">
@@ -105,7 +119,7 @@
                 <div class="ai-status" id="aiStatus">Generating daily insight...</div>
                 <button class="ai-log-download-btn" id="aiLogDownloadBtn" type="button">Download message log</button>
             </div>
-            <div class="ai-output" id="aiOutput">When connected, today's conversation invitation for Mindelo and Lausanne appears here.</div>
+            <div class="ai-output" id="aiOutput" aria-live="polite">When connected, today's conversation invitation for Mindelo and Lausanne appears here.</div>
             <p class="fact-sources"><a href="https://en.wikipedia.org/wiki/Mindelo" target="_blank" rel="noopener">Mindelo · Wikipedia ↗</a> · <a href="https://www.lausanne-tourisme.ch/en/olympic-capital/" target="_blank" rel="noopener">Lausanne Tourisme ↗</a></p>
         </div>
     </section>
@@ -291,6 +305,8 @@
         <div class="neuro-tip" id="neuroTip">Loading your daily tip...</div>
         <div class="neuro-source" id="neuroSource"></div>
     </section>
+
+    </main>
 
     <!-- Footer -->
     <footer class="bridge-footer" id="footer">

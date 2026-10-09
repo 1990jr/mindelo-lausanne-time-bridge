@@ -13,6 +13,11 @@
     (function() {
         'use strict';
 
+        function readPreference(key) {
+            try { return localStorage.getItem(key); }
+            catch { return null; }
+        }
+
         // ---- Configuration ----
         const MINDELO_TZ = 'Atlantic/Cape_Verde';  // UTC-1 year-round
         const LAUSANNE_TZ = 'Europe/Zurich';        // CET/CEST
@@ -21,7 +26,7 @@
         const DEFAULT_AI_ENDPOINT = 'https://mindelo-lausanne-ai-bridge.mindelo-lausanne-ai.workers.dev/api/insight';
         const AI_ENDPOINT = (
             (window.TIME_BRIDGE_CONFIG && window.TIME_BRIDGE_CONFIG.aiEndpoint) ||
-            localStorage.getItem('timeBridgeAiEndpoint') ||
+            readPreference('timeBridgeAiEndpoint') ||
             DEFAULT_AI_ENDPOINT ||
             ''
         ).trim();
@@ -29,7 +34,7 @@
         const MESSAGE_LOG_KEY = 'timeBridgeMessageDisplayLogV1';
 
         // ---- i18n Translations ----
-        let currentLang = localStorage.getItem('timeBridgeLang') || 'en';
+        let currentLang = readPreference('timeBridgeLang') || 'en';
         let aiHasGenerated = false;
         let aiFetchInProgress = false;
         let aiDailyContent = null;
@@ -40,6 +45,11 @@
         const LOCALES = { en: 'en-GB', fr: 'fr-FR', pt: 'pt-PT' };
 
         const T = {
+            skipLink:           { en: 'Skip to clocks', fr: 'Aller aux horloges', pt: 'Saltar para os relógios' },
+            navCall:            { en: 'Call times', fr: 'Quand appeler', pt: 'Quando ligar' },
+            navWeather:         { en: 'Weather', fr: 'Météo', pt: 'Meteorologia' },
+            navCalendar:        { en: 'Calendar', fr: 'Calendrier', pt: 'Calendário' },
+            navMedia:           { en: 'News & media', fr: 'Actualités et médias', pt: 'Notícias e média' },
             // ---- Header & structure ----
             subtitle:           { en: 'A bridge between two homes', fr: 'Un pont entre deux maisons', pt: 'Uma ponte entre duas casas' },
             pageTitle:          { en: 'Mindelo ↔ Lausanne Time Bridge', fr: 'Pont horaire Mindelo ↔ Lausanne', pt: 'Ponte horária Mindelo ↔ Lausanne' },
@@ -737,18 +747,21 @@
 
         // ---- Language Switcher ----
         function setLanguage(lang) {
-            lang = LOCALES[lang] ? lang : 'en';
+            lang = Object.hasOwn(LOCALES, lang) ? lang : 'en';
             currentLang = lang;
-            localStorage.setItem('timeBridgeLang', lang);
+            try { localStorage.setItem('timeBridgeLang', lang); }
+            catch { /* Language switching works even when storage is unavailable. */ }
             document.documentElement.lang = lang;
 
             // Update active button
             document.querySelectorAll('.lang-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.textContent === lang.toUpperCase());
+                btn.setAttribute('aria-pressed', String(btn.textContent === lang.toUpperCase()));
             });
 
             // Update static text elements
             const staticKeys = [
+                'skipLink', 'navCall', 'navWeather', 'navCalendar', 'navMedia',
                 'subtitle', 'locationCv', 'locationCh',
                 'happeningLabelCv', 'happeningLabelCh',
                 'callTitle', 'callSubtitle', 'callHoursCvLabel', 'callHoursChLabel',
@@ -790,7 +803,7 @@
             renderNeuroTip();
             refreshWeatherMeta();
             initAiInsight();
-            // Re-fetch weather to re-render with correct language
+            // Reuse recent data and translate immediately, without another request.
             fetchWeather();
         }
 
@@ -838,6 +851,7 @@
         }
 
         // ---- Call overlap ----
+        let overlapCache = { slot: null, windows: [] };
 
         function formatTimeInTZ(date, tz) {
             return date.toLocaleTimeString(LOCALES[currentLang], {
@@ -867,7 +881,12 @@
         }
 
         function updateBestTimeToCall(now) {
-            const windows = getOverlapWindows(now, { mindeloTz: MINDELO_TZ, lausanneTz: LAUSANNE_TZ });
+            // The search uses 15-minute slots; its result is unchanged within a slot.
+            const slot = Math.floor(now.getTime() / (15 * 60 * 1000));
+            if (overlapCache.slot !== slot) {
+                overlapCache = { slot, windows: getOverlapWindows(now, { mindeloTz: MINDELO_TZ, lausanneTz: LAUSANNE_TZ }) };
+            }
+            const windows = overlapCache.windows;
             const currentWindow = windows.find(w => now >= w.start && now < w.end);
             const nextWindow = windows.find(w => w.start > now);
             const statusEl = document.getElementById('callStatus');
@@ -1156,6 +1175,8 @@
 
         // ---- Weather (Open-Meteo — free, no API key needed) ----
         const WEATHER_CACHE_KEY = 'timeBridgeWeatherCacheV1';
+        const WEATHER_REFRESH_MS = 10 * 60 * 1000;
+        let weatherFetchInProgress = false;
         const WEATHER_META_IDS = { cv: 'weatherCvMeta', ch: 'weatherChMeta' };
         let weatherCache = loadWeatherCache();
         const weatherMeta = {
@@ -1166,7 +1187,8 @@
         function loadWeatherCache() {
             try {
                 const raw = localStorage.getItem(WEATHER_CACHE_KEY);
-                return raw ? JSON.parse(raw) : {};
+                const cache = raw ? JSON.parse(raw) : {};
+                return cache && typeof cache === 'object' && !Array.isArray(cache) ? cache : {};
             } catch (err) {
                 return {};
             }
@@ -1313,6 +1335,8 @@
         }
 
         async function fetchWeather() {
+            if (weatherFetchInProgress) return;
+            weatherFetchInProgress = true;
             const cities = [
                 { key: 'cv', lat: 16.89, lon: -24.98, tz: 'Atlantic/Cape_Verde', weatherContainer: 'weatherCvContent', sunContainer: 'sunCvContent' },
                 { key: 'ch', lat: 46.52, lon: 6.63, tz: 'Europe/Zurich', weatherContainer: 'weatherChContent', sunContainer: 'sunChContent' }
@@ -1331,6 +1355,21 @@
             }
 
             async function fetchCityWeather(city) {
+                const cached = weatherCache[city.key];
+                if (cached?.payload) {
+                    try {
+                        renderFromPayload(city, cached.payload);
+                        weatherMeta[city.key] = { fetchedAt: cached.fetchedAt, source: 'cache', offline: navigator.onLine === false };
+                        const age = Date.now() - cached.fetchedAt;
+                        if (navigator.onLine !== false && age >= 0 && age < WEATHER_REFRESH_MS) {
+                            weatherMeta[city.key].source = 'live';
+                            return;
+                        }
+                    } catch {
+                        // Discard malformed saved data and request a fresh payload.
+                        delete weatherCache[city.key];
+                    }
+                }
                 try {
                     const params = [
                         `latitude=${city.lat}`,
@@ -1357,7 +1396,7 @@
                         weatherMeta[city.key] = {
                             fetchedAt: cached.fetchedAt || Date.now(),
                             source: 'cache',
-                            offline: !navigator.onLine
+                            offline: navigator.onLine === false
                         };
                     } else {
                         renderWeatherError(city.weatherContainer, T.weatherFetchError[currentLang]);
@@ -1367,10 +1406,14 @@
                 }
             }
 
-            await Promise.allSettled(cities.map(city => fetchCityWeather(city)));
-            saveWeatherCache();
-            renderSunDiff(daylightByCity.cv, daylightByCity.ch);
-            refreshWeatherMeta();
+            try {
+                await Promise.allSettled(cities.map(city => fetchCityWeather(city)));
+                saveWeatherCache();
+                renderSunDiff(daylightByCity.cv, daylightByCity.ch);
+                refreshWeatherMeta();
+            } finally {
+                weatherFetchInProgress = false;
+            }
         }
 
         // ---- Cultural Calendar helpers ----
@@ -1522,9 +1565,22 @@
             setLanguage(currentLang);
 
             // Start clock interval
-            setInterval(updateClocks, 1000);
+            setInterval(() => {
+                if (!document.hidden) updateClocks();
+            }, 1000);
             // Refresh weather every 10 minutes
-            setInterval(fetchWeather, 600000);
+            setInterval(() => {
+                if (!document.hidden) fetchWeather();
+            }, WEATHER_REFRESH_MS);
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    updateClocks();
+                    renderCalendar();
+                    renderNeuroTip();
+                    initAiInsight();
+                    fetchWeather();
+                }
+            });
         }
 
         if (document.readyState === 'loading') {
