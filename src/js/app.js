@@ -45,6 +45,7 @@
         const LOCALES = { en: 'en-GB', fr: 'fr-FR', pt: 'pt-PT' };
 
         const T = {
+            headerEyebrow:      { en: 'Two cities. One connection.', fr: 'Deux villes. Un lien.', pt: 'Duas cidades. Uma ligação.' },
             skipLink:           { en: 'Skip to clocks', fr: 'Aller aux horloges', pt: 'Saltar para os relógios' },
             navCall:            { en: 'Call times', fr: 'Quand appeler', pt: 'Quando ligar' },
             navWeather:         { en: 'Weather', fr: 'Météo', pt: 'Meteorologia' },
@@ -762,7 +763,7 @@
             // Update static text elements
             const staticKeys = [
                 'skipLink', 'navCall', 'navWeather', 'navCalendar', 'navMedia',
-                'subtitle', 'locationCv', 'locationCh',
+                'headerEyebrow', 'subtitle', 'locationCv', 'locationCh',
                 'happeningLabelCv', 'happeningLabelCh',
                 'callTitle', 'callSubtitle', 'callHoursCvLabel', 'callHoursChLabel',
                 'aiTitle', 'aiSubtitle',
