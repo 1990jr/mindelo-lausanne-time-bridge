@@ -45,6 +45,7 @@
         const LOCALES = { en: 'en-GB', fr: 'fr-FR', pt: 'pt-PT' };
 
         const T = {
+            brandCredit:        { en: 'A personal project by', fr: 'Un projet personnel de', pt: 'Um projeto pessoal de' },
             headerEyebrow:      { en: 'Two cities. One connection.', fr: 'Deux villes. Un lien.', pt: 'Duas cidades. Uma ligação.' },
             skipLink:           { en: 'Skip to clocks', fr: 'Aller aux horloges', pt: 'Saltar para os relógios' },
             navCall:            { en: 'Call times', fr: 'Quand appeler', pt: 'Quando ligar' },
@@ -772,7 +773,7 @@
                 'calendarTitle', 'calendarSubtitle',
                 'mediaTitle', 'mediaSubtitle', 'mediaCvTitle', 'mediaChTitle',
                 'challengeTitle', 'challengeSource', 'challengeNext',
-                'neuroTitle', 'footerBrand', 'footerText'
+                'neuroTitle', 'footerBrand', 'footerText', 'brandCredit'
             ];
             staticKeys.forEach(key => {
                 const el = document.getElementById(key);
